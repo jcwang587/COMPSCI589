@@ -27,7 +27,7 @@ for index1, row in X_train.iterrows():
     distance = [np.sqrt(np.sum((row.values - x) ** 2)) for index2, row in X_train.iterrows()]
     idx_sort = np.argsort(distance)
     y_idx_sort = y_train.values[idx_sort]
-    topK_y = y_idx_sort[:2]
+    topK_y = y_idx_sort[:112]
     c = Counter(topK_y)
     print(c.most_common()[0][0])
     if c.most_common()[0][0] == y_train[index1]:
