@@ -59,6 +59,7 @@ row_list = []
 for index, rows in X_test.iterrows():
     my_list = [rows.sepal_length, rows.sepal_width, rows.petal_length, rows.petal_width]
     row_list.append([my_list])
+print(row_list)
 # k values for the number of neighbors that need to be considered
 k_n = [1, 3, 5, 7]
 # Distance metrics
