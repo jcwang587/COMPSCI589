@@ -64,18 +64,29 @@ k_n = [1, 3, 5, 7]
 # Distance metrics
 # Performing kNN on the development set by iterating all the development set data points and for each k and each
 # distance metric
+obs_k = {}
 development_set_obs_k = {}
 for k in k_n:
     development_set_obs = []
     for i in range(len(row_list)):
-        development_set_obs.append(
-            knn(X_train, pd.DataFrame(row_list[i]), k))
+        development_set_obs.append(knn(X_train, pd.DataFrame(row_list[i]), k))
     development_set_obs_k[k] = development_set_obs
     # Nested Dictionary containing the observed class for each k and each distance metric (obs_k of the form obs_k[
     # dist_method][k])
     obs_k = development_set_obs_k
-# print(obs_k)
+print(obs_k)
 
+# # Calculating the accuracy of the development set by comparing it with the development set 'class' list created
+# earlier accuracy = {} for key in obs_k(): accuracy[key] = {} for k_value in obs_k[key](): # print('k = ',
+# key) count = 0 for i, j in zip(y_train, obs_k[key][k_value]): if i == j: count = count + 1 else: pass accuracy[
+# key][k_value] = count / (len(y_train))
+#
+# # Storing the accuracy for each k and each distance metric into a dataframe
+# df_res = pd.DataFrame({'k': k_n})
+# for key in accuracy.keys():
+#     value = list(accuracy[key].values())
+#     df_res[key] = value
+# print(df_res)
 
 # # Load the dataset
 # df = pd.read_csv('iris.csv', header=None)
