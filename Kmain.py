@@ -10,7 +10,7 @@ df = pd.read_csv('iris.csv', header=None)
 df.columns = list(['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species'])
 
 # Shuffle the dataset
-df_sf = shuffle(df, random_state=0)
+df_sf = shuffle(df)
 X = df_sf[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
 y = df_sf['species']
 
@@ -18,11 +18,12 @@ y = df_sf['species']
 X = (X - X.min()) / (X.max() - X.min())
 
 # Randomly partition the dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # Train the k-NN algorithm
 accuracy = []
-for k in range(1, 120, 2):
+k_list = range(1, 120, 10)
+for k in k_list:
     correct = 0
     for index, row in X_train.iterrows():
         print(y_train[index])
@@ -36,10 +37,11 @@ for k in range(1, 120, 2):
         if c.most_common()[0][0] == y_train[index]:
             correct += 1
     accuracy.append(correct / 120)
-l1 = plt.plot(range(1, 120, 2), accuracy, 'b-', label='type1')
-plt.plot(range(1, 120, 2), accuracy, 'bo-')
+df = pd.DataFrame(accuracy)
+l1 = plt.plot(k_list, accuracy, 'b-', label='type1')
+plt.plot(k_list, accuracy, 'bo-')
 plt.title('The Lasers in Three Conditions')
-plt.xlabel('row')
-plt.ylabel('column')
+plt.xlabel('K')
+plt.ylabel('Accuracy')
 plt.legend()
 plt.show()
