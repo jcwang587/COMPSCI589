@@ -19,11 +19,12 @@ for i in range(0, loop):
     X = df_sf[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
     y = df_sf['species']
 
-    # Normalize the dataset
-    X = (X - X.min()) / (X.max() - X.min())
-
     # Randomly partition the dataset
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    # Normalize the dataset
+    X_train = (X_train - X_train.min()) / (X_train.max() - X_train.min())
+    X_test = (X_test - X_test.min()) / (X_test.max() - X_test.min())
 
     accuracy = []
     for k in k_list:
