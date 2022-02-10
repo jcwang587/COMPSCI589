@@ -6,3 +6,6 @@ from collections import Counter
 
 # Load the dataset
 df = pd.read_csv('house_votes_84.csv')
+
+# Calculate the information gain
+
