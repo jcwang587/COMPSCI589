@@ -16,13 +16,13 @@ def split_data(data_input, split_index, value):
     return data_output
 
 
-def calculate_entropy(data_input):
+def calculate_gini(data_input):
     label_list = [data[-1] for data in data_input]
-    entropy = 0
+    gini = 0
     for key in Counter(label_list).keys():
         probability = float(Counter(label_list)[key]) / len(data_input)
-        entropy += probability**2
-    return 1-entropy
+        gini += probability**2
+    return 1-gini
 
 
 def compare_information_gain(data_input):
@@ -35,9 +35,9 @@ def compare_information_gain(data_input):
         for value in branch_data_set:
             new_data = split_data(data_input, i_branch, value)
             probability = float(len(new_data)) / len(data_input)
-            new_entropy += probability * calculate_entropy(new_data)
+            new_entropy += probability * calculate_gini(new_data)
         # Compare the information gain
-        new_information_gain = calculate_entropy(data_input) - new_entropy
+        new_information_gain = calculate_gini(data_input) - new_entropy
         if new_information_gain > information_gain:
             information_gain = new_information_gain
             branch_index = i_branch
