@@ -50,4 +50,4 @@ if __name__ == '__main__':
     plt.plot(k_list, avg, '.', markersize=10, color='#1f77b4')
     plt.xlabel('Value of k')
     plt.ylabel('Accuracy over testing data')
-    plt.savefig("Figure2.eps", dpi=600, format="eps")
+    plt.savefig("FigurekNN2.eps", dpi=600, format="eps")
