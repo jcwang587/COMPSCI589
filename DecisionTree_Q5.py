@@ -115,4 +115,3 @@ if __name__ == '__main__':
     plt.xlabel('Accuracy')
     plt.ylabel('Accuracy frequency over training data')
     plt.savefig("FigureDT5.eps", dpi=600, format="eps")
-    plt.show()
