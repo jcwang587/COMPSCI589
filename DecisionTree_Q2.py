@@ -29,13 +29,13 @@ def compare_information_gain(data_input):
     branch_index = 0
     information_gain = 0
     for i_branch in range(len(data_input[0]) - 1):
-        new_entropy = 0  # 划分之后的信息嫡之和
-        featList = [data[i_branch] for data in data_input]  # 获取所有该属性的所有值
-        featSet = set(featList)  # 获取该属性不同的值
-        for value in featSet:
-            subDataSet = split_data(data_input, i_branch, value)  # 获取属性值相同的数据集
-            prob = float(len(subDataSet)) / len(data_input)
-            new_entropy += prob * calculate_entropy(subDataSet)
+        new_entropy = 0
+        branch_data = [data[i_branch] for data in data_input]
+        branch_data_set = set(branch_data)
+        for value in branch_data_set:
+            new_data = split_data(data_input, i_branch, value)
+            prob = float(len(new_data)) / len(data_input)
+            new_entropy += prob * calculate_entropy(new_data)
         # Compare the information gain
         new_information_gain = calculate_entropy(data_input) - new_entropy
         if new_information_gain > information_gain:
@@ -45,21 +45,21 @@ def compare_information_gain(data_input):
 
 
 def create_decision_tree(data_input, attribute):
-    classList = [data[-1] for data in data_input]
+    label_list = [data[-1] for data in data_input]
     # If all instances belong to the same class
-    if classList.count(classList[0]) == len(classList):
-        return classList[0]
+    if label_list.count(label_list[0]) == len(label_list):
+        return label_list[0]
     # If there are no more attributes that can be tested
     if len(data_input[0]) == 1:
-        return max(classList, key=classList.count)
-    # 选取最好的属性，采取ID3
+        return max(label_list, key=label_list.count)
+    # Decide the attribute
     branch_index = compare_information_gain(data_input)
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
-    featValues = [data[branch_index] for data in data_input]
-    featValuesSet = set(featValues)
+    branch_data = [data[branch_index] for data in data_input]
+    branch_data_set = set(branch_data)
     del (attribute[branch_index])
-    for value in featValuesSet:
+    for value in branch_data_set:
         new_label = attribute[:]
         decision_tree[branch][value] = create_decision_tree(split_data(data_input, branch_index, value), new_label)
     return decision_tree
