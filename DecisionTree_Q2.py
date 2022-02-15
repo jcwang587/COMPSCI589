@@ -1,7 +1,7 @@
-import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import Counter
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
@@ -18,39 +18,34 @@ def split_data(data_input, split_index, value):
 
 def calculate_entropy(data_input):
     label_list = [data[-1] for data in data_input]
-    classCount = {}  # 类别计数
     entropy = 0
-    for value in label_list:
-        if value not in classCount.keys():
-            classCount[value] = 0
-        classCount[value] += 1
-    for key in classCount.keys():
-        prob = float(classCount[key]) / len(data_input)
-        entropy -= prob * math.log(prob, 2)
+    for key in Counter(label_list).keys():
+        probability = float(Counter(label_list)[key]) / len(data_input)
+        entropy -= probability * np.log2(probability)
     return entropy
 
 
 def compare_information_gain(data_input):
-    branch_index = -1  # 选出的最好属性的index
-    information_gain = 0.0  # 记录最大的信息增益
-    for i in range(len(data_input[0]) - 1):
-        newEnt = 0.0  # 划分之后的信息嫡之和
-        featList = [data[i] for data in data_input]  # 获取所有该属性的所有值
+    branch_index = 0
+    information_gain = 0
+    for i_branch in range(len(data_input[0]) - 1):
+        new_entropy = 0  # 划分之后的信息嫡之和
+        featList = [data[i_branch] for data in data_input]  # 获取所有该属性的所有值
         featSet = set(featList)  # 获取该属性不同的值
         for value in featSet:
-            subDataSet = split_data(data_input, i, value)  # 获取属性值相同的数据集
+            subDataSet = split_data(data_input, i_branch, value)  # 获取属性值相同的数据集
             prob = float(len(subDataSet)) / len(data_input)
-            newEnt += prob * calculate_entropy(subDataSet)
-        # Calculate information gain
-        newGain = calculate_entropy(data_input) - newEnt
-        if newGain > information_gain:
-            information_gain = newGain
-            branch_index = i
+            new_entropy += prob * calculate_entropy(subDataSet)
+        # Compare the information gain
+        new_information_gain = calculate_entropy(data_input) - new_entropy
+        if new_information_gain > information_gain:
+            information_gain = new_information_gain
+            branch_index = i_branch
     return branch_index
 
 
 def create_decision_tree(data_input, attribute):
-    classList = [data[-1] for data in data_input]  # 获取数据集中所属类别的数据
+    classList = [data[-1] for data in data_input]
     # If all instances belong to the same class
     if classList.count(classList[0]) == len(classList):
         return classList[0]
@@ -58,11 +53,11 @@ def create_decision_tree(data_input, attribute):
     if len(data_input[0]) == 1:
         return max(classList, key=classList.count)
     # 选取最好的属性，采取ID3
-    branch_index = compare_information_gain(data_input)  # 最好属性的index
-    branch = attribute[branch_index]  # 最好属性的名字
-    decision_tree = {branch: {}}  # 存储决策树
+    branch_index = compare_information_gain(data_input)
+    branch = attribute[branch_index]
+    decision_tree = {branch: {}}
     featValues = [data[branch_index] for data in data_input]
-    featValuesSet = set(featValues)  # 不同类别的集合
+    featValuesSet = set(featValues)
     del (attribute[branch_index])
     for value in featValuesSet:
         new_label = attribute[:]
@@ -93,20 +88,16 @@ if __name__ == '__main__':
             # Shuffle the dataset
             df_sf = shuffle(df)
             y = df_sf[df.columns[16]]
-
             # Randomly partition the dataset
             data_train, data_test, y_train, y_test = train_test_split(df_sf, y, test_size=0.2)
-
             # Normalize the dataset
             X_train_data_list = data_train.values.tolist()
             X_test_data_list = data_test.values.tolist()
             X_train_attribute_list = data_train.keys().to_list()
-
             # Create decision tree
             X_train_attribute_list_copy = X_train_attribute_list[:]
             decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy)
             print(decisionTree)
-
             # Make prediction
             correct = 0
             for index in range(0, len(y_test)):
