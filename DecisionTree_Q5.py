@@ -21,8 +21,8 @@ def calculate_entropy(data_input):
     entropy = 0
     for key in Counter(label_list).keys():
         probability = float(Counter(label_list)[key]) / len(data_input)
-        entropy -= probability * np.log2(probability)
-    return entropy
+        entropy += probability**2
+    return 1-entropy
 
 
 def compare_information_gain(data_input):
@@ -114,5 +114,5 @@ if __name__ == '__main__':
     plt.hist(accuracy, weights=np.ones_like(accuracy) / len(accuracy), align="left", rwidth=0.9)
     plt.xlabel('Accuracy')
     plt.ylabel('Accuracy frequency over training data')
-    plt.savefig("Figure4.eps", dpi=600, format="eps")
+    plt.savefig("FigureDT5.eps", dpi=600, format="eps")
     plt.show()

@@ -110,5 +110,5 @@ if __name__ == '__main__':
     plt.hist(accuracy, weights=np.ones_like(accuracy) / len(accuracy), align="left", rwidth=0.9)
     plt.xlabel('Accuracy')
     plt.ylabel('Accuracy frequency over training data')
-    plt.savefig("Figure3.eps", dpi=600, format="eps")
+    plt.savefig("FigureDT1.eps", dpi=600, format="eps")
     plt.show()
