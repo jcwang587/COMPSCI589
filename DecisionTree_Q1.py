@@ -34,8 +34,8 @@ def compare_information_gain(data_input):
         branch_data_set = set(branch_data)
         for value in branch_data_set:
             new_data = split_data(data_input, i_branch, value)
-            prob = float(len(new_data)) / len(data_input)
-            new_entropy += prob * calculate_entropy(new_data)
+            probability = float(len(new_data)) / len(data_input)
+            new_entropy += probability * calculate_entropy(new_data)
         # Compare the information gain
         new_information_gain = calculate_entropy(data_input) - new_entropy
         if new_information_gain > information_gain:
