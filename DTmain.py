@@ -14,15 +14,12 @@ def find_branch(xdata, ydata):
     # If there are no more attributes that can be tested
     if len(xdata.columns) == 1:
         branch = pd.Series(xdata).value_counts().idxmax()
-
     # If all instances belong to the same class
     elif pd.Series(ydata).value_counts().values[0] == len(ydata):
         branch = ydata[0]
-
     else:
         # Calculate entropy of the original dataset
         i_data = calculate_prob_entropy(ydata)
-
         # Calculate entropy of the attributes
         i_attribute = {}
         for attribute in range(0, len(xdata.columns)):
@@ -34,10 +31,8 @@ def find_branch(xdata, ydata):
             # Calculate average entropy of the resulting partitions
             probability = pd.Series(xdata.iloc[:, attribute]).value_counts(normalize=True)
             i_attribute[attribute] = sum(probability.values * list(i_category.values()))
-
         # Calculate information gain
         i_gain = i_data - np.array(list(i_attribute.values()))
-
         # Decide the attribute
         best_attribute = np.where(i_gain == np.max(i_gain))[0][0]
         branch = xdata.columns[best_attribute]

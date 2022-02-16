@@ -30,9 +30,8 @@ def compare_information_gain(data_input):
     information_gain = []
     for i_branch in range(len(data_input[0]) - 1):
         new_entropy = 0
-        branch_data = [data[i_branch] for data in data_input]
-        branch_data_set = set(branch_data)
-        for value in branch_data_set:
+        branch_data = set([data[i_branch] for data in data_input])
+        for value in branch_data:
             new_data = split_data(data_input, i_branch, value)
             probability = len(new_data) / len(data_input)
             new_entropy += probability * calculate_entropy(new_data)
@@ -54,10 +53,9 @@ def create_decision_tree(data_input, attribute):
     branch_index = compare_information_gain(data_input)
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
-    branch_data = [data[branch_index] for data in data_input]
-    branch_data_set = set(branch_data)
+    branch_data = set([data[branch_index] for data in data_input])
     del (attribute[branch_index])
-    for value in branch_data_set:
+    for value in branch_data:
         new_label = attribute[:]
         decision_tree[branch][value] = create_decision_tree(split_data(data_input, branch_index, value), new_label)
     return decision_tree
