@@ -6,10 +6,10 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
 
-def split_data(data_input, split_index, value):
+def split_data(data_input, split_index, split_category):
     data_output = []
     for data in data_input:
-        if data[split_index] == value:
+        if data[split_index] == split_category:
             new_data = data[:split_index]
             new_data.extend(data[split_index + 1:])
             data_output.append(new_data)
@@ -31,8 +31,8 @@ def compare_information_gain(data_input):
     for i_branch in range(len(data_input[0]) - 1):
         new_entropy = 0
         branch_data = set([data[i_branch] for data in data_input])
-        for value in branch_data:
-            new_data = split_data(data_input, i_branch, value)
+        for category in branch_data:
+            new_data = split_data(data_input, i_branch, category)
             probability = len(new_data) / len(data_input)
             new_entropy += probability * calculate_entropy(new_data)
         # Compare the information gain
@@ -54,18 +54,17 @@ def create_decision_tree(data_input, attribute):
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
     branch_data = set([data[branch_index] for data in data_input])
-    del (attribute[branch_index])
-    for value in branch_data:
-        new_label = attribute[:]
-        decision_tree[branch][value] = create_decision_tree(split_data(data_input, branch_index, value), new_label)
+    del(attribute[branch_index])
+    for category in branch_data:
+        decision_tree[branch][category] = create_decision_tree(
+            split_data(data_input, branch_index, category), attribute[:])
     return decision_tree
 
 
 def predict(tree, attribute_list, test_data):
     label = list(tree.keys())[0]
-    label_index = attribute_list.index(label)
     dictionary = tree[label]
-    value = test_data[label_index]
+    value = test_data[attribute_list.index(label)]
     if type(dictionary[value]).__name__ == "dict":
         prediction = predict(dictionary[value], attribute_list, test_data)
     else:
