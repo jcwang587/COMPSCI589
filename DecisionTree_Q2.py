@@ -54,7 +54,7 @@ def create_decision_tree(data_input, attribute):
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
     branch_data = set([data[branch_index] for data in data_input])
-    del (attribute[branch_index])
+    del(attribute[branch_index])
     for category in branch_data:
         decision_tree[branch][category] = create_decision_tree(
             split_data(data_input, branch_index, category), attribute[:])
