@@ -27,20 +27,18 @@ def calculate_entropy(data_input):
 
 def compare_information_gain(data_input):
     branch_index = 0
-    information_gain = 0
+    information_gain = []
     for i_branch in range(len(data_input[0]) - 1):
         new_entropy = 0
         branch_data = [data[i_branch] for data in data_input]
         branch_data_set = set(branch_data)
         for value in branch_data_set:
             new_data = split_data(data_input, i_branch, value)
-            probability = float(len(new_data)) / len(data_input)
+            probability = len(new_data) / len(data_input)
             new_entropy += probability * calculate_entropy(new_data)
         # Compare the information gain
-        new_information_gain = calculate_entropy(data_input) - new_entropy
-        if new_information_gain > information_gain:
-            information_gain = new_information_gain
-            branch_index = i_branch
+        information_gain.append(calculate_entropy(data_input) - new_entropy)
+        branch_index = information_gain.index(max(information_gain))
     return branch_index
 
 
@@ -115,3 +113,4 @@ if __name__ == '__main__':
     plt.xlabel('Accuracy')
     plt.ylabel('Accuracy frequency over training data')
     plt.savefig("FigureDT2.eps", dpi=600, format="eps")
+    plt.show()
