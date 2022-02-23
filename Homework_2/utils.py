@@ -27,7 +27,7 @@ def load_training_set(percentage_positives, percentage_negatives):
     for filename in glob.glob('train/pos/*.txt'):
         if random.random() > percentage_positives:
             continue
-        with open(os.path.join(os.getcwd(), filename), 'r') as f:
+        with open(os.path.join(os.getcwd(), filename), 'r', encoding='UTF-8') as f:
             contents = f.read()
             contents = preprocess_text(contents)
             positive_instances.append(contents)
@@ -35,7 +35,7 @@ def load_training_set(percentage_positives, percentage_negatives):
     for filename in glob.glob('train/neg/*.txt'):
         if random.random() > percentage_negatives:
             continue
-        with open(os.path.join(os.getcwd(), filename), 'r') as f:
+        with open(os.path.join(os.getcwd(), filename), 'r', encoding='UTF-8') as f:
             contents = f.read()
             contents = preprocess_text(contents)
             negative_instances.append(contents)
