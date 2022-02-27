@@ -2,10 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
 from utils import *
-import pprint
 
 
 def words2vec(vocab_list, input_set):
@@ -60,21 +57,20 @@ class MultinomialNB(object):
          -1: {0: {1: 0.50, 2: 0.33, 3: 0.16}, 1: {4: 0.50, 5: 0.33, 6: 0.16}}
         }
         """
-
         unique_class = np.unique(y)
         for c in unique_class:
             self._cd_prob[c] = {}
-            c_idxs = np.where(y == c)[0]
+            c_idx = np.where(y == c)[0]
             for i, col_feature in enumerate(x.T):
                 dic_f_prob = {}
                 self._cd_prob[c][i] = dic_f_prob
-                for idx in c_idxs:
+                for idx in c_idx:
                     if col_feature[idx] in dic_f_prob:
                         dic_f_prob[col_feature[idx]] += 1
                     else:
                         dic_f_prob[col_feature[idx]] = 1
                 for k in dic_f_prob:
-                    dic_f_prob[k] = dic_f_prob[k] * 1.0 / len(c_idxs)
+                    dic_f_prob[k] = dic_f_prob[k] * 1.0 / len(c_idx)
 
     def _pred_once(self, x):
         dic_ret = {}
