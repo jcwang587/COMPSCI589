@@ -46,16 +46,13 @@ class MultinomialNB(object):
         """
         calculate Conditional Probability: P( xj | y=ck )
         like { c0:{ x0:{ value0:0.2, value1:0.8 }, x1:{} }, c1:{...} }
-
         for example the below ,as to class 1 feature 0 has 3 values "1, 2 , 3"
         the corresponding probability 0.22, 0.33, 0.44
         p( x1 = 1 | y = 1 ) = 0.22
         p( x1 = 2 | y = 1 ) = 0.33
         p( x1 = 3 | y = 1 ) = 0.44
-
         { 1: {0: {1: 0.22, 2: 0.33, 3: 0.44}, 1: {4: 0.11, 5: 0.44, 6: 0.44}},
-         -1: {0: {1: 0.50, 2: 0.33, 3: 0.16}, 1: {4: 0.50, 5: 0.33, 6: 0.16}}
-        }
+         -1: {0: {1: 0.50, 2: 0.33, 3: 0.16}, 1: {4: 0.50, 5: 0.33, 6: 0.16}}}
         """
         unique_class = np.unique(y)
         for c in unique_class:
@@ -82,7 +79,6 @@ class MultinomialNB(object):
                 except KeyError:
                     y_prob = y_prob * np.finfo(float).eps
             dic_ret[y] = y_prob
-
         return dic_ret
 
     def predict(self, x):
@@ -102,7 +98,7 @@ class MultinomialNB(object):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.1
+    sample_ratio = 0.05
     percentage_positive_instances_train = sample_ratio
     percentage_negative_instances_train = sample_ratio
 
