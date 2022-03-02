@@ -18,7 +18,6 @@ def words2vec(vocab_list, input_set):
 class MultinomialNB(object):
     def __init__(self, alpha=1.0):
         self.alpha = alpha
-
         self._dic_class_prior = {}
         self._cd_prob = {}
 
@@ -98,7 +97,7 @@ class MultinomialNB(object):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.05
+    sample_ratio = 0.2
     percentage_positive_instances_train = sample_ratio
     percentage_negative_instances_train = sample_ratio
 
