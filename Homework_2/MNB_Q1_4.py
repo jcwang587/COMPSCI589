@@ -42,10 +42,10 @@ class MultinomialNaiveBayes:
         result = []
         for text in X:
             class_scores = {c: self.log_class_priors[c] for c in self.classes}
-            print(X)
             words = set(text)
             for word in words:
-                if word not in self.vocab: continue
+                if word not in self.vocab:
+                    continue
                 for c in self.classes:
                     log_w_given_c = self.laplace_smoothing(word, c)
                     class_scores[c] += log_w_given_c
@@ -54,7 +54,7 @@ class MultinomialNaiveBayes:
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.004
+    sample_ratio = 0.001
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio
@@ -82,5 +82,5 @@ if __name__ == "__main__":
     y = np.array(train_label)
 
     MNB = MultinomialNaiveBayes(classes=np.unique(y)).fit(x, y)
-    item = np.array(neg_test[10])
+    item = np.array(neg_test)
     print(MNB.predict(item))
