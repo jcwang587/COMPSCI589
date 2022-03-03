@@ -129,5 +129,5 @@ if __name__ == "__main__":
     mnb = MultinomialNB()
     mnb.fit(x, y)
 
-    item = np.array(words2vec(vocab, neg_test[10]))
+    item = np.array(words2vec(vocab, neg_test[1]))
     print(mnb.predict(item))
