@@ -97,7 +97,7 @@ class MultinomialNB(object):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.004
+    sample_ratio = 0.0004
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio
