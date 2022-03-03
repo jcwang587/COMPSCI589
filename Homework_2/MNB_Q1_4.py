@@ -4,18 +4,7 @@ import math
 from utils import *
 
 
-def words2vec(vocab_list, input_set):
-    return_vec = [0] * len(vocab_list)
-    for words in input_set:
-        if words in vocab_list:
-            return_vec[vocab_list.index(words)] = 1
-        else:
-            print("the word: %s is not in my Vocabulary!" % words)
-    return return_vec
-
-
 class MultinomialNaiveBayes:
-
     def __init__(self, classes):
         self.classes = classes
 
@@ -30,16 +19,12 @@ class MultinomialNaiveBayes:
         self.log_class_priors = {}
         self.word_counts = {}
         self.vocab = set()
-
         n = len(X)
-
         grouped_data = self.group_by_class(X, y)
-
         for c, data in grouped_data.items():
             self.n_class_items[c] = len(data)
             self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
             self.word_counts[c] = defaultdict(lambda: 0)
-
             for text in data:
                 counts = Counter(text)
                 for word, count in counts.items():
@@ -65,7 +50,6 @@ class MultinomialNaiveBayes:
                     log_w_given_c = self.laplace_smoothing(word, c)
                     class_scores[c] += log_w_given_c
             result.append(max(class_scores, key=class_scores.get))
-
         return result
 
 
@@ -90,15 +74,13 @@ if __name__ == "__main__":
     print("Vocabulary (training set):", len(vocab))
 
     vocab = list(vocab)
-    pos_train_vec = [words2vec(vocab, pos_train[index]) for index in range(0, len(pos_train))]
     pos_train_label = [1] * len(pos_train)
-    neg_train_vec = [words2vec(vocab, neg_train[index]) for index in range(0, len(neg_train))]
     neg_train_label = [0] * len(neg_train)
-    train_vec = pos_train_vec + neg_train_vec
+    train_vec = pos_train + neg_train
     train_label = pos_train_label + neg_train_label
     x = np.array(train_vec)
     y = np.array(train_label)
 
     MNB = MultinomialNaiveBayes(classes=np.unique(y)).fit(x, y)
-    item = np.array(words2vec(vocab, neg_test[10]))
+    item = np.array(neg_test[10])
     print(MNB.predict(item))
