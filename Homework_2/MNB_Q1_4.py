@@ -7,20 +7,20 @@ from utils import *
 class MultinomialNaiveBayes:
     def __init__(self, classes):
         self.classes = classes
-
-    def group_by_class(self, X, y):
-        data = dict()
-        for c in self.classes:
-            data[c] = X[np.where(y == c)]
-        return data
-
-    def fit(self, X, y):
         self.n_class_items = {}
         self.log_class_priors = {}
         self.word_counts = {}
         self.vocab = set()
-        n = len(X)
-        grouped_data = self.group_by_class(X, y)
+
+    def group_by_class(self, x, y):
+        data = dict()
+        for c in self.classes:
+            data[c] = x[np.where(y == c)]
+        return data
+
+    def fit(self, x, y):
+        n = len(x)
+        grouped_data = self.group_by_class(x, y)
         for c, data in grouped_data.items():
             self.n_class_items[c] = len(data)
             self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
@@ -34,9 +34,9 @@ class MultinomialNaiveBayes:
         return self
 
     def laplace_smoothing(self, word, text_class):
-        num = self.word_counts[text_class][word] + 1
-        denom = self.n_class_items[text_class] + len(self.vocab)
-        return math.log(num / denom)
+        numerator = self.word_counts[text_class][word] + 1
+        denominator = self.n_class_items[text_class] + len(self.vocab)
+        return math.log(numerator / denominator)
 
     def predict(self, X):
         result = []
@@ -51,6 +51,12 @@ class MultinomialNaiveBayes:
                     class_scores[c] += log_w_given_c
             result.append(max(class_scores, key=class_scores.get))
         return result
+
+    def accuracy_score(self):
+        print()
+
+    def confusion_matrix(self):
+        print()
 
 
 if __name__ == "__main__":
@@ -67,20 +73,14 @@ if __name__ == "__main__":
     print("Number of negative training instances:", len(neg_train))
     print("Number of positive test instances:", len(pos_test))
     print("Number of negative test instances:", len(neg_test))
-
-    with open('vocab.txt', 'w', encoding='UTF-8') as f:
-        for word in vocab:
-            f.write("%s\n" % word)
     print("Vocabulary (training set):", len(vocab))
 
     vocab = list(vocab)
     pos_train_label = [1] * len(pos_train)
     neg_train_label = [0] * len(neg_train)
-    train_vec = pos_train + neg_train
-    train_label = pos_train_label + neg_train_label
-    x = np.array(train_vec)
-    y = np.array(train_label)
+    train_data = np.array(pos_train + neg_train)
+    train_label = np.array(pos_train_label + neg_train_label)
 
-    MNB = MultinomialNaiveBayes(classes=np.unique(y)).fit(x, y)
+    MNB = MultinomialNaiveBayes(classes=np.unique(train_label)).fit(train_data, train_label)
     item = np.array(neg_test)
     print(MNB.predict(item))
