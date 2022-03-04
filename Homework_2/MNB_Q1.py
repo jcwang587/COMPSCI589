@@ -1,103 +1,94 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from collections import Counter
+import seaborn as sn
+from collections import Counter, defaultdict
 from utils import *
+import math
 
 
-def words2vec(vocab_list, input_set):
-    return_vec = [0] * len(vocab_list)
-    for words in input_set:
-        if words in vocab_list:
-            return_vec[vocab_list.index(words)] = 1
-        else:
-            print("the word: %s is not in my Vocabulary!" % words)
-    return return_vec
+class MultinomialNaiveBayes:
+    def __init__(self, classes):
+        self.classes = classes
+        self.n_class_items = {}
+        self.log_class_priors = {}
+        self.word_counts = {}
+        self.vocab = set()
 
-
-class MultinomialNB(object):
-    def __init__(self, alpha=1.0):
-        self.alpha = alpha
-        self._dic_class_prior = {}
-        self._cd_prob = {}
+    def group_by_class(self, x, y):
+        data = dict()
+        for c in self.classes:
+            data[c] = x[np.where(y == c)]
+        return data
 
     def fit(self, x, y):
-        # calculate class prior probabilities: P(y=ck)
-        self._cal_y_prob(y)
+        n = len(x)
+        grouped_data = self.group_by_class(x, y)
+        for c, data in grouped_data.items():
+            self.n_class_items[c] = len(data)
+            self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
+            self.word_counts[c] = defaultdict(lambda: 0)
+            for text in data:
+                counts = Counter(text)
+                for word, count in counts.items():
+                    if word not in self.vocab:
+                        self.vocab.add(word)
+                    self.word_counts[c][word] += count
+        return self
 
-        # calculate Conditional Probability: P( xj | y=ck )
-        self._cal_x_prob(x, y)
-
-    def _cal_y_prob(self, y):
-        """
-        calculate class prior probability
-        like: {class_1: prob_1, class_2:prob_2, ...}
-        for example two class 1, 2 with probability 0.4 and 0.6
-        {1: 0.4, 2: 0.6}
-        """
-        sample_num = len(y) * 1.0
-        unique_class, class_count = np.unique(y, return_counts=True)
-        # calculate class prior probability
-        for c, num in zip(unique_class, class_count):
-            self._dic_class_prior[c] = num / sample_num
-
-    def _cal_x_prob(self, x, y):
-        """
-        calculate Conditional Probability: P( xj | y=ck )
-        like { c0:{ x0:{ value0:0.2, value1:0.8 }, x1:{} }, c1:{...} }
-        for example the below ,as to class 1 feature 0 has 3 values "1, 2 , 3"
-        the corresponding probability 0.22, 0.33, 0.44
-        p( x1 = 1 | y = 1 ) = 0.22
-        p( x1 = 2 | y = 1 ) = 0.33
-        p( x1 = 3 | y = 1 ) = 0.44
-        { 1: {0: {1: 0.22, 2: 0.33, 3: 0.44}, 1: {4: 0.11, 5: 0.44, 6: 0.44}},
-         -1: {0: {1: 0.50, 2: 0.33, 3: 0.16}, 1: {4: 0.50, 5: 0.33, 6: 0.16}}}
-        """
-        unique_class = np.unique(y)
-        for c in unique_class:
-            self._cd_prob[c] = {}
-            c_idx = np.where(y == c)[0]
-            for i, col_feature in enumerate(x.T):
-                dic_f_prob = {}
-                self._cd_prob[c][i] = dic_f_prob
-                for idx in c_idx:
-                    if col_feature[idx] in dic_f_prob:
-                        dic_f_prob[col_feature[idx]] += 1
-                    else:
-                        dic_f_prob[col_feature[idx]] = 1
-                for k in dic_f_prob:
-                    dic_f_prob[k] = dic_f_prob[k] * 1.0 / len(c_idx)
-
-    def _pred_once(self, x):
-        dic_ret = {}
-        for y in self._dic_class_prior:
-            y_prob = self._dic_class_prior[y]
-            for i, v in enumerate(x):
-                try:
-                    y_prob = y_prob * self._cd_prob[y][i][v]
-                except KeyError:
-                    y_prob = y_prob * np.finfo(float).eps
-            dic_ret[y] = y_prob
-        return dic_ret
+    def laplace_smoothing(self, word, text_class):
+        numerator = self.word_counts[text_class][word] + 1
+        denominator = self.n_class_items[text_class] + len(self.vocab)
+        return math.log(numerator / denominator)
 
     def predict(self, x):
-        if x.ndim == 1:
-            return self._pred_once(x)
-        else:
-            labels = []
-            for i in range(x.shape[0]):
-                labels.append(self._pred_once(x[i]))
-        return labels
+        result = []
+        for text in x:
+            class_scores = {c: self.log_class_priors[c] for c in self.classes}
+            words = set(text)
+            for word in words:
+                if word not in self.vocab:
+                    continue
+                for c in self.classes:
+                    log_w_given_c = self.laplace_smoothing(word, c)
+                    class_scores[c] += log_w_given_c
+            result.append(max(class_scores, key=class_scores.get))
+        return result
 
-    def get_class_prior(self):
-        return self._dic_class_prior
 
-    def get_cd_prob(self):
-        return self._cd_prob
+def accuracy_score(y_true, y_pred):
+    score = y_true == y_pred
+    return np.average(score)
+
+
+def precision_score(y_true, y_pred):
+    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
+    tp = [y_pred[i] for i in tp_tn_idx].count(1)
+    tp_fp = y_pred.count(1)
+    return tp / tp_fp
+
+
+def recall_score(y_true, y_pred):
+    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
+    tp = [y_pred[i] for i in tp_tn_idx].count(1)
+    tp_fn = y_true.tolist().count(1)
+    return tp / tp_fn
+
+
+def confusion_matrix(y_true, y_pred):
+    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
+    tp = [y_pred[i] for i in tp_tn_idx].count(1)
+    tp_fp = y_pred.count(1)
+    tp_fn = y_true.tolist().count(1)
+    fp = tp_fp - tp
+    fn = tp_fn - tp
+    tn = len(y_true) - tp - fp - fn
+    matrix = [[tp, fn], [fp, tn]]
+    return matrix
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.0004
+    sample_ratio = 0.004
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio
@@ -110,24 +101,30 @@ if __name__ == "__main__":
     print("Number of negative training instances:", len(neg_train))
     print("Number of positive test instances:", len(pos_test))
     print("Number of negative test instances:", len(neg_test))
-
-    with open('vocab.txt', 'w', encoding='UTF-8') as f:
-        for word in vocab:
-            f.write("%s\n" % word)
     print("Vocabulary (training set):", len(vocab))
 
-    vocab = list(vocab)
-    pos_train_vec = [words2vec(vocab, pos_train[index]) for index in range(0, len(pos_train))]
     pos_train_label = [1] * len(pos_train)
-    neg_train_vec = [words2vec(vocab, neg_train[index]) for index in range(0, len(neg_train))]
     neg_train_label = [0] * len(neg_train)
-    train_vec = pos_train_vec + neg_train_vec
-    train_label = pos_train_label + neg_train_label
-    x = np.array(train_vec)
-    y = np.array(train_label)
+    train_data = np.array(pos_train + neg_train, dtype=object)
+    train_label = np.array(pos_train_label + neg_train_label, dtype=object)
 
-    mnb = MultinomialNB()
-    mnb.fit(x, y)
+    MNB = MultinomialNaiveBayes(classes=np.unique(train_label)).fit(train_data, train_label)
 
-    item = np.array(words2vec(vocab, neg_test[1]))
-    print(mnb.predict(item))
+    pos_test_label = [1] * len(pos_test)
+    neg_test_label = [0] * len(neg_test)
+    test_data = np.array(pos_test + neg_test, dtype=object)
+    test_label = np.array(pos_test_label + neg_test_label, dtype=object)
+
+    predict_label = MNB.predict(test_data)
+
+    accuracy = accuracy_score(test_label, predict_label)
+    precision = precision_score(test_label, predict_label)
+    recall = recall_score(test_label, predict_label)
+    print(accuracy)
+    print(precision)
+    print(recall)
+    df_cm = pd.DataFrame(confusion_matrix(test_label, predict_label))
+    sn.set(font_scale=1.4)
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})
+    plt.show()
+    plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
