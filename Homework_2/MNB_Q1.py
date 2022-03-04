@@ -39,7 +39,10 @@ class MultinomialNaiveBayes:
     def laplace_smoothing(self, word, text_class, alpha):
         numerator = self.word_counts[text_class][word] + alpha
         denominator = self.n_class_items[text_class] + alpha * len(self.vocab)
-        return math.log(numerator / denominator)
+        if numerator / denominator == 0:
+            return math.log(np.finfo(float).eps)
+        else:
+            return math.log(numerator / denominator)
 
     def predict(self, x, alpha):
         result = []
@@ -115,7 +118,7 @@ if __name__ == "__main__":
     test_data = np.array(pos_test + neg_test, dtype=object)
     test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 1)
+    predict_label = MNB.predict(test_data, 0)
 
     accuracy = accuracy_score(test_label, predict_label)
     precision = precision_score(test_label, predict_label)
