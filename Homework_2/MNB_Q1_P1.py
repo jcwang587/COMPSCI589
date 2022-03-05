@@ -4,14 +4,13 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 from collections import Counter, defaultdict
 from utils import *
-import math
 
 
 class MultinomialNaiveBayes:
     def __init__(self, classes):
         self.classes = classes
         self.n_class_items = {}
-        self.log_class_priors = {}
+        self.class_priors = {}
         self.word_counts = {}
         self.vocab = set()
 
@@ -26,7 +25,7 @@ class MultinomialNaiveBayes:
         grouped_data = self.group_by_class(x, y)
         for c, data in grouped_data.items():
             self.n_class_items[c] = len(data)
-            self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
+            self.class_priors[c] = self.n_class_items[c] / n
             self.word_counts[c] = defaultdict(lambda: 0)
             for text in data:
                 counts = Counter(text)
@@ -39,22 +38,19 @@ class MultinomialNaiveBayes:
     def laplace_smoothing(self, word, text_class, alpha):
         numerator = self.word_counts[text_class][word] + alpha
         denominator = self.n_class_items[text_class] + alpha * len(self.vocab)
-        if numerator / denominator == 0:
-            return math.log(np.finfo(float).eps)
-        else:
-            return math.log(numerator / denominator)
+        return numerator / denominator
 
     def predict(self, x, alpha):
         result = []
         for text in x:
-            class_scores = {c: self.log_class_priors[c] for c in self.classes}
+            class_scores = {c: self.class_priors[c] for c in self.classes}
             words = set(text)
             for word in words:
                 if word not in self.vocab:
                     continue
                 for c in self.classes:
-                    log_w_given_c = self.laplace_smoothing(word, c, alpha)
-                    class_scores[c] += log_w_given_c
+                    w_given_c = self.laplace_smoothing(word, c, alpha)
+                    class_scores[c] *= w_given_c
             result.append(max(class_scores, key=class_scores.get))
         return result
 
