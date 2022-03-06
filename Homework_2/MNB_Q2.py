@@ -125,6 +125,6 @@ if __name__ == "__main__":
     print(recall)
     df_cm = pd.DataFrame(confusion_matrix(test_label, predict_label))
     sn.set(font_scale=1.4)
-    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='.20g')
     plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
     # plt.show()
