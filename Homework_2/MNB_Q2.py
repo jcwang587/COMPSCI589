@@ -88,7 +88,7 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.004
+    sample_ratio = 0.2
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio
@@ -127,4 +127,4 @@ if __name__ == "__main__":
     sn.set(font_scale=1.4)
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='.20g')
     plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
-    # plt.show()
+    plt.show()

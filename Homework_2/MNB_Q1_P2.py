@@ -40,7 +40,7 @@ class MultinomialNaiveBayes:
         numerator = self.word_counts[text_class][word] + alpha
         denominator = self.n_class_items[text_class] + alpha * len(self.vocab)
         if numerator / denominator == 0:
-            return math.log(np.finfo(float).eps)
+            return math.log((np.finfo(float).eps + numerator) / denominator)
         else:
             return math.log(numerator / denominator)
 
@@ -91,7 +91,7 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.004
+    sample_ratio = 0.2
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio

@@ -87,7 +87,7 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    sample_ratio = 0.04
+    sample_ratio = 0.2
     percent_positive_instance_train = sample_ratio
     percent_negative_instance_train = sample_ratio
     percent_positive_instance_test = sample_ratio
