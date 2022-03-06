@@ -88,10 +88,10 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    percent_positive_instance_train = 0.2
-    percent_negative_instance_train = 0.2
-    percent_positive_instance_test = 0.2
-    percent_negative_instance_test = 0.2
+    percent_positive_instance_train = 0.5
+    percent_negative_instance_train = 0.5
+    percent_positive_instance_test = 1
+    percent_negative_instance_test = 1
 
     (pos_train, neg_train, vocab) = load_training_set(percent_positive_instance_train, percent_negative_instance_train)
     (pos_test, neg_test) = load_test_set(percent_positive_instance_test, percent_negative_instance_test)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     test_data = np.array(pos_test + neg_test, dtype=object)
     test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 100)
+    predict_label = MNB.predict(test_data, 1)
 
     accuracy = accuracy_score(test_label, predict_label)
     precision = precision_score(test_label, predict_label)

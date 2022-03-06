@@ -88,10 +88,10 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    percent_positive_instance_train = 0.2
-    percent_negative_instance_train = 0.2
-    percent_positive_instance_test = 0.2
-    percent_negative_instance_test = 0.2
+    percent_positive_instance_train = 1
+    percent_negative_instance_train = 1
+    percent_positive_instance_test = 1
+    percent_negative_instance_test = 1
 
     (pos_train, neg_train, vocab) = load_training_set(percent_positive_instance_train, percent_negative_instance_train)
     (pos_test, neg_test) = load_test_set(percent_positive_instance_test, percent_negative_instance_test)
