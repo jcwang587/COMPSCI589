@@ -114,7 +114,7 @@ if __name__ == "__main__":
     test_data = np.array(pos_test + neg_test, dtype=object)
     test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 100)
+    predict_label = MNB.predict(test_data, 10)
 
     accuracy = accuracy_score(test_label, predict_label)
     precision = precision_score(test_label, predict_label)
@@ -125,5 +125,5 @@ if __name__ == "__main__":
     df_cm = pd.DataFrame(confusion_matrix(test_label, predict_label))
     sn.set(font_scale=1.4)
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='.20g')
-    plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
+    plt.savefig("MNB_Q3.eps", dpi=600, format="eps")
     plt.show()

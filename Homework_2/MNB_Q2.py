@@ -88,42 +88,45 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    percent_positive_instance_train = 0.2
-    percent_negative_instance_train = 0.2
-    percent_positive_instance_test = 0.2
-    percent_negative_instance_test = 0.2
+    accuracy_list = []
+    alpha_list = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    for alpha in alpha_list:
+        percent_positive_instance_train = 0.2
+        percent_negative_instance_train = 0.2
+        percent_positive_instance_test = 0.2
+        percent_negative_instance_test = 0.2
 
-    (pos_train, neg_train, vocab) = load_training_set(percent_positive_instance_train, percent_negative_instance_train)
-    (pos_test, neg_test) = load_test_set(percent_positive_instance_test, percent_negative_instance_test)
+        (pos_train, neg_train, vocab) = load_training_set(percent_positive_instance_train, percent_negative_instance_train)
+        (pos_test, neg_test) = load_test_set(percent_positive_instance_test, percent_negative_instance_test)
 
-    print("Number of positive training instances:", len(pos_train))
-    print("Number of negative training instances:", len(neg_train))
-    print("Number of positive test instances:", len(pos_test))
-    print("Number of negative test instances:", len(neg_test))
-    print("Vocabulary (training set):", len(vocab))
+        print("Number of positive training instances:", len(pos_train))
+        print("Number of negative training instances:", len(neg_train))
+        print("Number of positive test instances:", len(pos_test))
+        print("Number of negative test instances:", len(neg_test))
+        print("Vocabulary (training set):", len(vocab))
 
-    pos_train_label = [1] * len(pos_train)
-    neg_train_label = [0] * len(neg_train)
-    train_data = np.array(pos_train + neg_train, dtype=object)
-    train_label = np.array(pos_train_label + neg_train_label, dtype=object)
+        pos_train_label = [1] * len(pos_train)
+        neg_train_label = [0] * len(neg_train)
+        train_data = np.array(pos_train + neg_train, dtype=object)
+        train_label = np.array(pos_train_label + neg_train_label, dtype=object)
 
-    MNB = MultinomialNaiveBayes(classes=np.unique(train_label)).fit(train_data, train_label)
+        MNB = MultinomialNaiveBayes(classes=np.unique(train_label)).fit(train_data, train_label)
 
-    pos_test_label = [1] * len(pos_test)
-    neg_test_label = [0] * len(neg_test)
-    test_data = np.array(pos_test + neg_test, dtype=object)
-    test_label = np.array(pos_test_label + neg_test_label, dtype=object)
+        pos_test_label = [1] * len(pos_test)
+        neg_test_label = [0] * len(neg_test)
+        test_data = np.array(pos_test + neg_test, dtype=object)
+        test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 100)
+        predict_label = MNB.predict(test_data, alpha)
 
-    accuracy = accuracy_score(test_label, predict_label)
-    precision = precision_score(test_label, predict_label)
-    recall = recall_score(test_label, predict_label)
-    print(accuracy)
-    print(precision)
-    print(recall)
-    df_cm = pd.DataFrame(confusion_matrix(test_label, predict_label))
-    sn.set(font_scale=1.4)
-    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='.20g')
-    plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
+        accuracy = accuracy_score(test_label, predict_label)
+        precision = precision_score(test_label, predict_label)
+        recall = recall_score(test_label, predict_label)
+        print(accuracy)
+        accuracy_list.append(accuracy)
+
+    plt.semilogx(alpha_list, accuracy_list, '.-', markersize=10, color='#1f77b4')
+    plt.xlabel('Value of alpha')
+    plt.ylabel('Accuracy on the test set')
+    plt.savefig("MNB_Q2.eps", dpi=600, format="eps")
     plt.show()

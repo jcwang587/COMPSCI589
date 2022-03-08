@@ -65,8 +65,6 @@ def precision_score(y_true, y_pred):
     tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
     tp = [y_pred[i] for i in tp_tn_idx].count(1)
     tp_fp = y_pred.count(1)
-    print(tp)
-    print(tp_fp)
     return tp / tp_fp
 
 
@@ -90,7 +88,7 @@ def confusion_matrix(y_true, y_pred):
 
 
 if __name__ == "__main__":
-    percent_positive_instance_train = 0.2
+    percent_positive_instance_train = 0.1
     percent_negative_instance_train = 0.5
     percent_positive_instance_test = 1
     percent_negative_instance_test = 1
@@ -127,5 +125,5 @@ if __name__ == "__main__":
     df_cm = pd.DataFrame(confusion_matrix(test_label, predict_label))
     sn.set(font_scale=1.4)
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='.20g')
-    plt.savefig("MNB_Q1.eps", dpi=600, format="eps")
+    plt.savefig("MNB_Q6.eps", dpi=600, format="eps")
     plt.show()
