@@ -114,7 +114,7 @@ if __name__ == "__main__":
     test_data = np.array(pos_test + neg_test, dtype=object)
     test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 1)
+    predict_label = MNB.predict(test_data, 10)
 
     accuracy = accuracy_score(test_label, predict_label)
     precision = precision_score(test_label, predict_label)
