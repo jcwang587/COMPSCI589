@@ -35,12 +35,12 @@ class MultinomialNaiveBayes:
                     self.word_counts[c][word] += count
         return self
 
-    def laplace_smoothing(self, word, text_class, alpha):
-        numerator = self.word_counts[text_class][word] + alpha
-        denominator = self.n_class_items[text_class] + alpha * len(self.vocab)
+    def laplace_smoothing(self, word, text_class):
+        numerator = self.word_counts[text_class][word]
+        denominator = self.n_class_items[text_class]
         return numerator / denominator
 
-    def predict(self, x, alpha):
+    def predict(self, x):
         result = []
         for text in x:
             class_scores = {c: self.class_priors[c] for c in self.classes}
@@ -49,7 +49,7 @@ class MultinomialNaiveBayes:
                 if word not in self.vocab:
                     continue
                 for c in self.classes:
-                    w_given_c = self.laplace_smoothing(word, c, alpha)
+                    w_given_c = self.laplace_smoothing(word, c)
                     class_scores[c] *= w_given_c
             result.append(max(class_scores, key=class_scores.get))
         return result
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     test_data = np.array(pos_test + neg_test, dtype=object)
     test_label = np.array(pos_test_label + neg_test_label, dtype=object)
 
-    predict_label = MNB.predict(test_data, 0)
+    predict_label = MNB.predict(test_data)
 
     accuracy = accuracy_score(test_label, predict_label)
     precision = precision_score(test_label, predict_label)
