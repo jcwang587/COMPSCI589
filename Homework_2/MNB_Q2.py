@@ -13,7 +13,7 @@ class MultinomialNaiveBayes:
         self.word_counts = {}
         self.vocab = set()
 
-    def group_by_class(self, x, y):
+    def group_data(self, x, y):
         data = dict()
         for c in self.classes:
             data[c] = x[np.where(y == c)]
@@ -21,7 +21,7 @@ class MultinomialNaiveBayes:
 
     def fit(self, x, y):
         n = len(x)
-        grouped_data = self.group_by_class(x, y)
+        grouped_data = self.group_data(x, y)
         for c, data in grouped_data.items():
             self.n_class_items[c] = len(data)
             self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
