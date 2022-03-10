@@ -8,8 +8,8 @@ import math
 class MultinomialNaiveBayes:
     def __init__(self, classes):
         self.classes = classes
-        self.n_class_items = {}
-        self.log_class_priors = {}
+        self.items = {}
+        self.log_priors = {}
         self.word_counts = {}
         self.vocab = set()
 
@@ -23,8 +23,8 @@ class MultinomialNaiveBayes:
         n = len(x)
         grouped_data = self.group_data(x, y)
         for c, data in grouped_data.items():
-            self.n_class_items[c] = len(data)
-            self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
+            self.items[c] = len(data)
+            self.log_priors[c] = math.log(self.items[c] / n)
             self.word_counts[c] = defaultdict(lambda: 0)
             for text in data:
                 counts = Counter(text)
@@ -36,13 +36,13 @@ class MultinomialNaiveBayes:
 
     def laplace_smoothing(self, word, text_class, alpha):
         numerator = self.word_counts[text_class][word] + alpha
-        denominator = self.n_class_items[text_class] + alpha * len(self.vocab)
+        denominator = self.items[text_class] + alpha * len(self.vocab)
         return math.log(numerator / denominator)
 
     def predict(self, x, alpha):
         result = []
         for text in x:
-            class_scores = {c: self.log_class_priors[c] for c in self.classes}
+            class_scores = {c: self.log_priors[c] for c in self.classes}
             words = set(text)
             for word in words:
                 if word not in self.vocab:

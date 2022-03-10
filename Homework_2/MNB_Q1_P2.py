@@ -10,8 +10,8 @@ import math
 class MultinomialNaiveBayes:
     def __init__(self, classes):
         self.classes = classes
-        self.n_class_items = {}
-        self.log_class_priors = {}
+        self.items = {}
+        self.log_priors = {}
         self.word_counts = {}
         self.vocab = set()
 
@@ -25,8 +25,8 @@ class MultinomialNaiveBayes:
         n = len(x)
         grouped_data = self.group_data(x, y)
         for c, data in grouped_data.items():
-            self.n_class_items[c] = len(data)
-            self.log_class_priors[c] = math.log(self.n_class_items[c] / n)
+            self.items[c] = len(data)
+            self.log_priors[c] = math.log(self.items[c] / n)
             self.word_counts[c] = defaultdict(lambda: 0)
             for text in data:
                 counts = Counter(text)
@@ -36,9 +36,9 @@ class MultinomialNaiveBayes:
                     self.word_counts[c][word] += count
         return self
 
-    def laplace_smoothing(self, word, text_class):
+    def probability(self, word, text_class):
         numerator = self.word_counts[text_class][word]
-        denominator = self.n_class_items[text_class]
+        denominator = self.items[text_class]
         if numerator / denominator == 0:
             return math.log((np.finfo(float).eps + numerator) / denominator)
         else:
@@ -47,13 +47,13 @@ class MultinomialNaiveBayes:
     def predict(self, x):
         result = []
         for text in x:
-            class_scores = {c: self.log_class_priors[c] for c in self.classes}
+            class_scores = {c: self.log_priors[c] for c in self.classes}
             words = set(text)
             for word in words:
                 if word not in self.vocab:
                     continue
                 for c in self.classes:
-                    log_w_given_c = self.laplace_smoothing(word, c)
+                    log_w_given_c = self.probability(word, c)
                     class_scores[c] += log_w_given_c
             result.append(max(class_scores, key=class_scores.get))
         return result
