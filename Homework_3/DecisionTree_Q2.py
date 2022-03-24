@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -78,14 +79,32 @@ if __name__ == '__main__':
     df = pd.read_csv('house_votes_84.csv')
     iteration = 0
     accuracy = []
-    while iteration < 100:
+    # Split the original dataset
+    list_target = df['target'].unique()
+    df1 = df[df['target'].isin([list_target[0]])]
+    df0 = df[df['target'].isin([list_target[1]])]
+    # Split into folds
+    kfold = []
+    fold_size1 = math.ceil(len(df1) / 10)
+    fold_size0 = math.ceil(len(df0) / 10)
+    while len(df1) > fold_size1:
+        fold1 = df1.sample(n=fold_size1)
+        fold0 = fold1.append(df0.sample(n=fold_size0))
+        df1 = df1[~df1.index.isin(fold1.index)]
+        df0 = df0[~df0.index.isin(fold0.index)]
+        kfold.append(fold0)
+    kfold.append(df1.append(df0))
+
+    while iteration < 1:
         print(iteration)
         try:
             # Shuffle the dataset
-            df_sf = shuffle(df)
+            df_sf = shuffle(kfold[iteration])
             y = df_sf[df.columns[16]]
             # Randomly partition the dataset
             data_train, data_test, y_train, y_test = train_test_split(df_sf, y, test_size=0.2)
+            data_train
+
             # Normalize the dataset
             X_train_data_list = data_train.values.tolist()
             X_test_data_list = data_test.values.tolist()
