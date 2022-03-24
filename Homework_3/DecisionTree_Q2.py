@@ -102,9 +102,9 @@ if __name__ == '__main__':
             df_sf = shuffle(kfold[iteration])
             y = df_sf[df.columns[16]]
             # Randomly partition the dataset
-            data_train, data_test, y_train, y_test = train_test_split(df_sf, y, test_size=0.2)
-            data_train
-
+            data_test = kfold[0]
+            del(kfold[0])
+            data_train = pd.concat(kfold)
             # Normalize the dataset
             X_train_data_list = data_train.values.tolist()
             X_test_data_list = data_test.values.tolist()
