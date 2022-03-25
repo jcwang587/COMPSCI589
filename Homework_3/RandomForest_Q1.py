@@ -123,10 +123,4 @@ while iteration < 1:
     except:
         pass
         continue
-std = np.std(accuracy)
-avg = np.mean(accuracy)
-plt.hist(accuracy, weights=np.ones_like(accuracy) / len(accuracy), align="left", rwidth=0.9)
-plt.xlabel('Accuracy')
-plt.ylabel('Accuracy frequency over training data')
-plt.show()
 TreePlot.createPlot(decisionTree)
