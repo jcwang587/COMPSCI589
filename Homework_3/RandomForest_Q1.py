@@ -74,60 +74,59 @@ def predict(tree, attribute_list, test_data):
     return prediction
 
 
-if __name__ == '__main__':
-    # Load data
-    df = pd.read_csv('house_votes_84.csv')
-    iteration = 0
-    accuracy = []
-    # Split the original dataset
-    list_target = df['target'].unique()
-    df1 = df[df['target'].isin([list_target[0]])]
-    df0 = df[df['target'].isin([list_target[1]])]
-    # Split into folds
-    kfold = []
-    fold_size1 = math.ceil(len(df1) / 10)
-    fold_size0 = math.ceil(len(df0) / 10)
-    while len(df1) > fold_size1:
-        fold1 = df1.sample(n=fold_size1)
-        fold0 = fold1.append(df0.sample(n=fold_size0))
-        df1 = df1[~df1.index.isin(fold1.index)]
-        df0 = df0[~df0.index.isin(fold0.index)]
-        kfold.append(fold0)
-    kfold.append(df1.append(df0))
+# if __name__ == '__main__':
+# Load data
+df = pd.read_csv('house_votes_84.csv')
+iteration = 0
+accuracy = []
+# Split the original dataset
+list_target = df['target'].unique()
+df1 = df[df['target'].isin([list_target[0]])]
+df0 = df[df['target'].isin([list_target[1]])]
+# Split into folds
+kfold = []
+fold_size1 = math.ceil(len(df1) / 10)
+fold_size0 = math.ceil(len(df0) / 10)
+while len(df1) > fold_size1:
+    fold1 = df1.sample(n=fold_size1)
+    fold0 = fold1.append(df0.sample(n=fold_size0))
+    df1 = df1[~df1.index.isin(fold1.index)]
+    df0 = df0[~df0.index.isin(fold0.index)]
+    kfold.append(fold0)
+kfold.append(df1.append(df0))
 
-    while iteration < 1:
-        print(iteration)
-        try:
-            # Shuffle the dataset
-            df_sf = shuffle(kfold[iteration])
-            y = df_sf[df.columns[16]]
-            # Randomly partition the dataset
-            data_test = kfold[0]
-            del(kfold[0])
-            data_train = pd.concat(kfold)
-            # Normalize the dataset
-            X_train_data_list = data_train.values.tolist()
-            X_test_data_list = data_test.values.tolist()
-            X_train_attribute_list = data_train.keys().to_list()
-            # Create decision tree
-            X_train_attribute_list_copy = X_train_attribute_list[:]
-            decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy)
-            print(decisionTree)
-            # Make prediction
-            correct = 0
-            for index in range(0, len(y_test)):
-                classLabel = predict(decisionTree, X_train_attribute_list, X_test_data_list[index])
-                if classLabel == y_test.values[index]:
-                    correct += 1
-            accuracy.append(correct / len(y_test))
-            iteration += 1
-        except:
-            pass
-            continue
-    std = np.std(accuracy)
-    avg = np.mean(accuracy)
-    plt.hist(accuracy, weights=np.ones_like(accuracy) / len(accuracy), align="left", rwidth=0.9)
-    plt.xlabel('Accuracy')
-    plt.ylabel('Accuracy frequency over training data')
-    plt.show()
-    TreePlot.createPlot(decisionTree)
+while iteration < 1:
+    print(iteration)
+    try:
+        # Split to train and test dataset
+        data_test = kfold[0]
+        del(kfold[0])
+        data_train = pd.concat(kfold)
+        y_test = data_test[data_test.columns[16]]
+        y_train = data_train[data_train.columns[16]]
+        # Convert to list format
+        X_train_data_list = data_train.values.tolist()
+        X_test_data_list = data_test.values.tolist()
+        X_train_attribute_list = data_train.keys().to_list()
+        # Create decision tree
+        X_train_attribute_list_copy = X_train_attribute_list[:]
+        decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy)
+        print(decisionTree)
+        # Make prediction
+        correct = 0
+        for index in range(0, len(y_test)):
+            classLabel = predict(decisionTree, X_train_attribute_list, X_test_data_list[index])
+            if classLabel == y_test.values[index]:
+                correct += 1
+        accuracy.append(correct / len(y_test))
+        iteration += 1
+    except:
+        pass
+        continue
+std = np.std(accuracy)
+avg = np.mean(accuracy)
+plt.hist(accuracy, weights=np.ones_like(accuracy) / len(accuracy), align="left", rwidth=0.9)
+plt.xlabel('Accuracy')
+plt.ylabel('Accuracy frequency over training data')
+plt.show()
+TreePlot.createPlot(decisionTree)
