@@ -101,9 +101,9 @@ while iteration < 1:
         # Split to train and test dataset
         data_test = kfold[0]
         del(kfold[0])
-        data_train = pd.concat(kfold)
-        y_test = data_test[data_test.columns[16]]
-        y_train = data_train[data_train.columns[16]]
+        data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True).sample(n=4, axis=1)
+        y_test = data_test[data_test.columns[-1]]
+        y_train = data_train[data_train.columns[-1]]
         # Convert to list format
         X_train_data_list = data_train.values.tolist()
         X_test_data_list = data_test.values.tolist()
@@ -111,7 +111,6 @@ while iteration < 1:
         # Create decision tree
         X_train_attribute_list_copy = X_train_attribute_list[:]
         decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy)
-        print(decisionTree)
         # Make prediction
         correct = 0
         for index in range(0, len(y_test)):
@@ -123,4 +122,5 @@ while iteration < 1:
     except:
         pass
         continue
+    print(decisionTree)
 TreePlot.createPlot(decisionTree)
