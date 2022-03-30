@@ -102,6 +102,7 @@ while iteration < 1:
         data_test = kfold[0]
         del(kfold[0])
         data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True).sample(n=4, axis=1)
+        data_test = data_test[data_train.keys().to_list()]
         y_test = data_test[data_test.columns[-1]]
         y_train = data_train[data_train.columns[-1]]
         # Convert to list format
