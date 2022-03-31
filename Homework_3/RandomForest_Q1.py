@@ -101,6 +101,7 @@ while iteration < 1:
         # Split to train and test dataset
         data_test = kfold[0]
         del(kfold[0])
+        # !!!!!!!!!!!!!!!!!!!!!!!!target was added in the attributes
         data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True).sample(n=4, axis=1)
         data_test = data_test[data_train.keys().to_list()]
         y_test = data_test[data_test.columns[-1]]
