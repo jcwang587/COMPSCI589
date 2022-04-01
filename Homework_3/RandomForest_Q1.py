@@ -52,6 +52,8 @@ def create_decision_tree(data_input, attribute):
     if len(data_input[0]) == 1:
         return max(label_list, key=label_list.count)
     # Decide the attribute
+    data_input_sample = data_input
+
     branch_index = compare_information_gain(data_input)
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
@@ -102,8 +104,8 @@ while iteration < 1:
         data_test = kfold[0]
         del(kfold[0])
         # !!!!!!!!!!!!!!!!!!!!!!!!target was added in the attributes
-        data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True).sample(n=4, axis=1)
-        data_test = data_test[data_train.keys().to_list()]
+        data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True)
+        # data_test = data_test[data_train.keys().to_list()]
         y_test = data_test[data_test.columns[-1]]
         y_train = data_train[data_train.columns[-1]]
         # Convert to list format
