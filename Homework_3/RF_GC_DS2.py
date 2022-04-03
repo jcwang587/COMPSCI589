@@ -78,8 +78,8 @@ def create_decision_tree(data_input, attribute, sample_attribute_number):
         return max(label_list, key=label_list.count)
     # Randomly select m attribute for sampling
     jdx_range = random.sample(range(0, len(attribute) - 1), sample_attribute_number)
-    data_input_sample_unzip = [[idx[jdx] for idx in data_input] for jdx in jdx_range] + \
-                              [[idx[-1] for idx in data_input]]
+    data_input_sample_unzip = [[kdx[jdx] for kdx in data_input] for jdx in jdx_range] + \
+                              [[kdx[-1] for kdx in data_input]]
     data_input_sample = list(map(list, zip(*data_input_sample_unzip)))
     # Decide the attribute to split
     branch_index = jdx_range[compare_information_gain(data_input_sample)]
