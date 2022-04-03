@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
-import TreePlot
 
 
 def find_max_layer(tree):
@@ -108,38 +107,49 @@ kfold.append(df1.append(df0))
 
 iteration = 0
 accuracy = []
+# Change the number of trees
+ntree = 1
 while iteration < 10:
-    try:
-        # Split to train and test dataset
-        kfold_copy = kfold[:]
-        data_test = kfold[iteration]
-        del kfold_copy[iteration]
-        data_train = pd.concat(kfold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-        y_test = data_test[data_test.columns[-1]]
-        y_train = data_train[data_train.columns[-1]]
-        # Convert to list format
-        X_train_data_list = data_train.values.tolist()
-        X_test_data_list = data_test.values.tolist()
-        X_train_attribute_list = data_train.keys().to_list()
-        # Create decision tree
-        X_train_attribute_list_copy = X_train_attribute_list[:]
-        m = math.ceil((len(X_train_attribute_list_copy) - 1) ** 0.5)
-        decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy, m)
-        # Make prediction
-        correct = 0
-        for index in range(0, len(y_test)):
-            classLabel = predict(decisionTree, X_train_attribute_list, X_test_data_list[index])
-            if classLabel == y_test.values[index]:
-                correct += 1
-        accuracy.append(correct / len(y_test))
-        iteration += 1
-        print("***********************************************************")
-        print("iteration:", iteration)
-    except:
-        pass
-        continue
-    print(decisionTree)
-    TreePlot.createPlot(decisionTree)
-    print("maximal depth:", (find_max_layer(decisionTree) + 1) / 2)
-print("average accuracy:", np.mean(accuracy))
+    itree = 0
+    classLabel_rf_unzip = []
+    while itree < ntree:
+        try:
+            # Split to train and test dataset
+            kfold_copy = kfold[:]
+            data_test = kfold[iteration]
+            del kfold_copy[iteration]
+            data_train = pd.concat(kfold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+            y_test = data_test[data_test.columns[-1]]
+            y_train = data_train[data_train.columns[-1]]
+            # Convert to list format
+            X_train_data_list = data_train.values.tolist()
+            X_test_data_list = data_test.values.tolist()
+            X_train_attribute_list = data_train.keys().to_list()
+            # Create decision tree
+            X_train_attribute_list_copy = X_train_attribute_list[:]
+            m = math.ceil((len(X_train_attribute_list_copy) - 1) ** 0.5)
+            decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy, m)
+            # Make predictions
+            classLabel_list = []
+            for index in range(0, len(y_test)):
+                classLabel = predict(decisionTree, X_train_attribute_list, X_test_data_list[index])
+                classLabel_list.append(classLabel)
+            classLabel_rf_unzip.append(classLabel_list)
+            itree += 1
+            print(decisionTree)
+            print("ntree: ", itree)
+        except:
+            pass
+            continue
+    classLabel_rf = list(map(list, zip(*classLabel_rf_unzip)))
+    final_prediction = [max(idx, key=idx.count) for idx in classLabel_rf]
+    correct = 0
+    for index in range(0, len(y_test)):
+        if final_prediction[index] == y_test.values[index]:
+            correct += 1
+    accuracy.append(correct / len(y_test))
+    iteration += 1
+    print("iteration: ", iteration)
+print("average accuracy: ", np.mean(accuracy))
+
 
