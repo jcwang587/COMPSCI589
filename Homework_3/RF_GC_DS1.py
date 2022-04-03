@@ -43,13 +43,13 @@ def split_data(data_input, split_index, split_category):
     return data_output
 
 
-def calculate_entropy(data_input):
+def calculate_gini(data_input):
     label_list = [data[-1] for data in data_input]
-    entropy = 0
+    gini = 0
     for key in Counter(label_list).keys():
         probability = float(Counter(label_list)[key]) / len(data_input)
-        entropy -= probability * np.log2(probability)
-    return entropy
+        gini += probability ** 2
+    return 1 - gini
 
 
 def compare_information_gain(data_input):
@@ -61,9 +61,9 @@ def compare_information_gain(data_input):
         for category in branch_data:
             new_data = split_data(data_input, i_branch, category)
             probability = len(new_data) / len(data_input)
-            new_entropy += probability * calculate_entropy(new_data)
+            new_entropy += probability * calculate_gini(new_data)
         # Compare the information gain
-        information_gain.append(calculate_entropy(data_input) - new_entropy)
+        information_gain.append(calculate_gini(data_input) - new_entropy)
         branch_index = information_gain.index(max(information_gain))
     return branch_index
 
@@ -193,24 +193,23 @@ if __name__ == '__main__':
     plt.xlabel('Value of ntree')
     plt.ylabel('Accuracy of the random forest')
     plt.title('The Wine Dataset')
-    plt.savefig("FigureDS1_Accuracy.eps", dpi=600, format="eps")
+    plt.savefig("FigureDS1_GC_Accuracy.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_precision, '.-', markersize=10, color='#ff7f0e', label='Precision')
     plt.xlabel('Value of ntree')
     plt.ylabel('Precision of the random forest')
     plt.title('The Wine Dataset')
-    plt.savefig("FigureDS1_Precision.eps", dpi=600, format="eps")
+    plt.savefig("FigureDS1_GC_Precision.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_recall, '.-', markersize=10, color='#2ca02c', label='Recall')
     plt.xlabel('Value of ntree')
     plt.ylabel('Recall of the random forest')
     plt.title('The Wine Dataset')
-    plt.savefig("FigureDS1_Recall.eps", dpi=600, format="eps")
+    plt.savefig("FigureDS1_GC_Recall.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_f1, '.-', markersize=10, color='#d62728', label='F1')
     plt.xlabel('Value of ntree')
     plt.ylabel('F1 of the random forest')
     plt.title('The Wine Dataset')
-    plt.savefig("FigureDS1_F1.eps", dpi=600, format="eps")
+    plt.savefig("FigureDS1_GC_F1.eps", dpi=600, format="eps")
     plt.show()
-
