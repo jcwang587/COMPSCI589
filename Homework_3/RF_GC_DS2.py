@@ -116,7 +116,7 @@ if __name__ == '__main__':
     kfold = []
     fold_size1 = math.ceil(len(df1) / 10)
     fold_size0 = math.ceil(len(df0) / 10)
-    while len(df1) > fold_size1:
+    for k in range(0, 9):
         fold1 = df1.sample(n=fold_size1)
         fold0 = fold1.append(df0.sample(n=fold_size0))
         df1 = df1[~df1.index.isin(fold1.index)]
