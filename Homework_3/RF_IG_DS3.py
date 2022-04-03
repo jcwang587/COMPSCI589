@@ -107,7 +107,7 @@ def predict(tree, attribute_list, test_data):
 
 if __name__ == '__main__':
     # Load data
-    df = pd.read_csv('hw3_cancer.csv', sep='\t')
+    df = pd.read_csv('hw3_cancer.csv', sep='\t')[:300]
     col_mean = df.mean().tolist()
     for idx in range(0, len(df.columns) - 1):
         df.loc[df[df.keys()[idx]] <= col_mean[idx], df.keys()[idx]] = 0
