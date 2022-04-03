@@ -25,6 +25,10 @@ def recall_score(y_true, y_pred):
     return tp / tp_fn
 
 
+def f1_score(precision_value, recall_value):
+    return 2 * precision_value * recall_value / (precision_value + recall_value)
+
+
 def find_max_layer(tree):
     layer = 0
     for key in tree.keys():
@@ -111,7 +115,7 @@ if __name__ == '__main__':
     col_class = df.pop('# class')
     df.insert(len(df.columns), '# class', col_class)
     col_mean = df.mean().tolist()
-    for idx in range(0, len(df.columns)-1):
+    for idx in range(0, len(df.columns) - 1):
         df.loc[df[df.keys()[idx]] <= col_mean[idx], df.keys()[idx]] = 0
         df.loc[df[df.keys()[idx]] > col_mean[idx], df.keys()[idx]] = 1
     # Split the original dataset
@@ -180,11 +184,38 @@ if __name__ == '__main__':
                     continue
             classLabel_rf = list(map(list, zip(*classLabel_rf_unzip)))
             final_prediction = [max(idx, key=idx.count) for idx in classLabel_rf]
+            final_prediction = [int(i_prediction) for i_prediction in final_prediction]
+            final_true = y_test.values.tolist()
             # Calculate metrics
-            accuracy.append(accuracy_score(y_test.values, final_prediction))
-            precision.append(precision_score(y_test.values, final_prediction))
-            recall.append(recall_score(y_test.values, final_prediction))
-            f1.append(2 * (precision[iteration] * recall[iteration]) / (precision[iteration] + recall[iteration]))
+            final_prediction_1 = [0 if i in [2, 3] else i for i in final_prediction]
+            final_true_1 = np.array([0 if i in [2, 3] else i for i in final_true])
+            accuracy1 = accuracy_score(final_true_1, final_prediction_1)
+            precision1 = precision_score(final_true_1, final_prediction_1)
+            recall1 = recall_score(final_true_1, final_prediction_1)
+            f11 = 2 * (precision1 * recall1) / (precision1 + recall1)
+
+            final_prediction_2 = [0 if i in [1, 3] else i for i in final_prediction]
+            final_prediction_2 = [1 if i == 2 else i for i in final_prediction_2]
+            final_true_2 = [0 if i in [1, 3] else i for i in final_true]
+            final_true_2 = np.array([1 if i == 2 else i for i in final_true_2])
+            accuracy2 = accuracy_score(final_true_2, final_prediction_2)
+            precision2 = precision_score(final_true_2, final_prediction_2)
+            recall2 = recall_score(final_true_2, final_prediction_2)
+            f12 = 2 * (precision2 * recall2) / (precision2 + recall2)
+
+            final_prediction_3 = [0 if i in [1, 2] else i for i in final_prediction]
+            final_prediction_3 = [1 if i == 3 else i for i in final_prediction_3]
+            final_true_3 = [0 if i in [1, 2] else i for i in final_true]
+            final_true_3 = np.array([1 if i == 3 else i for i in final_true_3])
+            accuracy3 = accuracy_score(final_true_3, final_prediction_3)
+            precision3 = precision_score(final_true_3, final_prediction_3)
+            recall3 = recall_score(final_true_3, final_prediction_3)
+            f13 = 2 * (precision3 * recall3) / (precision3 + recall3)
+
+            accuracy.append(np.mean([accuracy1, accuracy2, accuracy3]))
+            precision.append(np.mean([precision1, precision2, precision3]))
+            recall.append(np.mean([recall1, recall2, recall3]))
+            f1.append(np.mean([f11, f12, f13]))
             iteration += 1
             print("iteration: ", iteration)
         n_accuracy.append(np.mean(accuracy))
