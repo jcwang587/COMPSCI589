@@ -1,11 +1,18 @@
 import math
+import random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
 import TreePlot
+
+
+def find_max_layer(tree):
+    layer = 0
+    for key in tree.keys():
+        if type(tree[key]).__name__ == "dict":
+            layer = max(layer, find_max_layer(tree[key]) + 1)
+    return layer
 
 
 def split_data(data_input, split_index, split_category):
@@ -43,7 +50,7 @@ def compare_information_gain(data_input):
     return branch_index
 
 
-def create_decision_tree(data_input, attribute):
+def create_decision_tree(data_input, attribute, sample_attribute_number):
     label_list = [data[-1] for data in data_input]
     # If all instances belong to the same class
     if label_list.count(label_list[0]) == len(label_list):
@@ -51,17 +58,21 @@ def create_decision_tree(data_input, attribute):
     # If there are no more attributes that can be tested
     if len(data_input[0]) == 1:
         return max(label_list, key=label_list.count)
-    # Decide the attribute
-    data_input_sample = data_input
-
-    branch_index = compare_information_gain(data_input)
+    # Randomly select m attribute for sampling
+    jdx_range = random.sample(range(0, len(attribute) - 1), sample_attribute_number)
+    data_input_sample_unzip = [[idx[jdx] for idx in data_input] for jdx in jdx_range] + \
+                              [[idx[-1] for idx in data_input]]
+    data_input_sample = list(map(list, zip(*data_input_sample_unzip)))
+    # Decide the attribute to split
+    branch_index = jdx_range[compare_information_gain(data_input_sample)]
     branch = attribute[branch_index]
     decision_tree = {branch: {}}
     branch_data = set([data[branch_index] for data in data_input])
     del (attribute[branch_index])
+    # Check stopping criteria of maximal depth
     for category in branch_data:
         decision_tree[branch][category] = create_decision_tree(
-            split_data(data_input, branch_index, category), attribute[:])
+            split_data(data_input, branch_index, category), attribute[:], sample_attribute_number)
     return decision_tree
 
 
@@ -79,8 +90,6 @@ def predict(tree, attribute_list, test_data):
 # if __name__ == '__main__':
 # Load data
 df = pd.read_csv('house_votes_84.csv')
-iteration = 0
-accuracy = []
 # Split the original dataset
 list_target = df['target'].unique()
 df1 = df[df['target'].isin([list_target[0]])]
@@ -97,15 +106,15 @@ while len(df1) > fold_size1:
     kfold.append(fold0)
 kfold.append(df1.append(df0))
 
-while iteration < 1:
-    print(iteration)
+iteration = 0
+accuracy = []
+while iteration < 10:
     try:
         # Split to train and test dataset
-        data_test = kfold[0]
-        del(kfold[0])
-        # !!!!!!!!!!!!!!!!!!!!!!!!target was added in the attributes
-        data_train = pd.concat(kfold).sample(n=len(df)-len(data_test.index), replace=True)
-        # data_test = data_test[data_train.keys().to_list()]
+        kfold_copy = kfold[:]
+        data_test = kfold[iteration]
+        del kfold_copy[iteration]
+        data_train = pd.concat(kfold_copy).sample(n=len(df) - len(data_test.index), replace=True)
         y_test = data_test[data_test.columns[-1]]
         y_train = data_train[data_train.columns[-1]]
         # Convert to list format
@@ -114,7 +123,8 @@ while iteration < 1:
         X_train_attribute_list = data_train.keys().to_list()
         # Create decision tree
         X_train_attribute_list_copy = X_train_attribute_list[:]
-        decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy)
+        m = math.ceil((len(X_train_attribute_list_copy) - 1) ** 0.5)
+        decisionTree = create_decision_tree(X_train_data_list, X_train_attribute_list_copy, m)
         # Make prediction
         correct = 0
         for index in range(0, len(y_test)):
@@ -123,8 +133,13 @@ while iteration < 1:
                 correct += 1
         accuracy.append(correct / len(y_test))
         iteration += 1
+        print("***********************************************************")
+        print("iteration:", iteration)
     except:
         pass
         continue
     print(decisionTree)
-TreePlot.createPlot(decisionTree)
+    TreePlot.createPlot(decisionTree)
+    print("maximal depth:", (find_max_layer(decisionTree) + 1) / 2)
+print("average accuracy:", np.mean(accuracy))
+
