@@ -87,6 +87,8 @@ def create_decision_tree(data_input, attribute, sample_attribute_number):
     decision_tree = {branch: {}}
     branch_data = set([data[branch_index] for data in data_input])
     del (attribute[branch_index])
+    if find_max_layer(decision_tree) > 10:
+        return decision_tree
     # Check stopping criteria of maximal depth
     for category in branch_data:
         decision_tree[branch][category] = create_decision_tree(
@@ -107,7 +109,7 @@ def predict(tree, attribute_list, test_data):
 
 if __name__ == '__main__':
     # Load data
-    df = pd.read_csv('hw3_cancer.csv', sep='\t')[:300]
+    df = pd.read_csv('hw3_cancer.csv', sep='\t')[:100]
     col_mean = df.mean().tolist()
     for idx in range(0, len(df.columns) - 1):
         df.loc[df[df.keys()[idx]] <= col_mean[idx], df.keys()[idx]] = 0
@@ -190,24 +192,24 @@ if __name__ == '__main__':
     plt.plot(ntree_list, n_accuracy, '.-', markersize=10, color='#1f77b4', label='Accuracy')
     plt.xlabel('Value of ntree')
     plt.ylabel('Accuracy of the random forest')
-    plt.title('The Wine Dataset')
+    plt.title('Breast Cancer Dataset')
     plt.savefig("FigureDS3_IG_Accuracy.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_precision, '.-', markersize=10, color='#ff7f0e', label='Precision')
     plt.xlabel('Value of ntree')
     plt.ylabel('Precision of the random forest')
-    plt.title('The Wine Dataset')
+    plt.title('Breast Cancer Dataset')
     plt.savefig("FigureDS3_IG_Precision.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_recall, '.-', markersize=10, color='#2ca02c', label='Recall')
     plt.xlabel('Value of ntree')
     plt.ylabel('Recall of the random forest')
-    plt.title('The Wine Dataset')
+    plt.title('Breast Cancer Dataset')
     plt.savefig("FigureDS3_IG_Recall.eps", dpi=600, format="eps")
     plt.show()
     plt.plot(ntree_list, n_f1, '.-', markersize=10, color='#d62728', label='F1')
     plt.xlabel('Value of ntree')
     plt.ylabel('F1 of the random forest')
-    plt.title('The Wine Dataset')
+    plt.title('Breast Cancer Dataset')
     plt.savefig("FigureDS3_IG_F1.eps", dpi=600, format="eps")
     plt.show()

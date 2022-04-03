@@ -87,6 +87,8 @@ def create_decision_tree(data_input, attribute, sample_attribute_number):
     decision_tree = {branch: {}}
     branch_data = set([data[branch_index] for data in data_input])
     del (attribute[branch_index])
+    if find_max_layer(decision_tree) > 10:
+        return decision_tree
     # Check stopping criteria of maximal depth
     for category in branch_data:
         decision_tree[branch][category] = create_decision_tree(
