@@ -109,7 +109,10 @@ def predict(tree, attribute_list, test_data):
 
 if __name__ == '__main__':
     # Load data
-    df = pd.read_csv('cmc.data', header=None).sample(frac=0.1)
+    df1 = pd.read_csv('cmc.data', header=None)[0:50]
+    df2 = pd.read_csv('cmc.data', header=None)[415:465]
+    df3 = pd.read_csv('cmc.data', header=None)[642:692]
+    df = pd.concat([df1, df2, df3])
     col_mean = df.mean().tolist()
     col_num = [0, 3]
     for idx in col_num:
