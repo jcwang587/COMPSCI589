@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 
 
@@ -22,9 +21,6 @@ def nnGradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y,
     Theta2_colCount = Theta2.shape[1]
     Theta2_x = Theta2[:, 1:Theta2_colCount]
 
-    Theta1_grad = np.zeros((Theta1.shape))  # 第一层到第二层的权重
-    Theta2_grad = np.zeros((Theta2.shape))  # 第二层到第三层的权重
-
     '''正向传播，每次需要补上一列1的偏置bias'''
     a1 = np.hstack((np.ones((m, 1)), X))
     z2 = np.dot(a1, np.transpose(Theta1))
@@ -41,10 +37,11 @@ def nnGradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y,
     delta3 = np.zeros((m, num_labels))
     delta2 = np.zeros((m, hidden_layer_size))
     for i in range(m):
-        # delta3[i,:] = (h[i,:]-class_y[i,:])*sigmoidGradient(z3[i,:])  # 均方误差的误差率
+        Theta1_grad = np.zeros((Theta1.shape))  # 第一层到第二层的权重
+        Theta2_grad = np.zeros((Theta2.shape))  # 第二层到第三层的权重
         delta3[i, :] = h[i, :] - y[i, :]  # 交叉熵误差率
         Theta2_grad = Theta2_grad + np.dot(np.transpose(delta3[i, :].reshape(1, -1)), a2[i, :].reshape(1, -1))
-        delta2[i, :] = np.dot(delta3[i, :].reshape(1, -1), Theta2_x) * a2[i, :].reshape(1, -1) * (1 - a2[i, :].reshape(1, -1))
+        delta2[i, :] = np.dot(delta3[i, :].reshape(1, -1), Theta2_x) * sigmoidGradient(z2[i, :])
         Theta1_grad = Theta1_grad + np.dot(np.transpose(delta2[i, :].reshape(1, -1)), a1[i, :].reshape(1, -1))
         print('Theta2_grad', Theta2_grad)
         print('Theta1_grad', Theta1_grad)
