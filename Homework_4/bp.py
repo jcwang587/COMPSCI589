@@ -370,7 +370,7 @@ def gradient_check(network, sample_feature, sample_label):
 
 
 if __name__ == '__main__':
-    net = Network([2, 3, 2])
+    net = Network([2, 3, 3, 7, 2])
     _sample_feature = [0.13, 0.42]
     _sample_label = [0.9, 0.23]
     gradient_check(net, _sample_feature, _sample_label)

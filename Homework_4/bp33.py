@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, Lambda):
+def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, lambd):
     length = nn_params.shape[0]
     Theta1 = nn_params[0:hidden_layer_size * (input_layer_size + 1)].reshape(hidden_layer_size,
                                                                              input_layer_size + 1).copy()
@@ -23,11 +23,11 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     h = a3
     term = np.dot(np.transpose(np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1)))),
                   np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1))))
-    J1 = -np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) / m + Lambda * term / (2 * m)
-    cost1 = np.sum(np.power(Theta1_x, 2))
-    print(cost1)
+    J1 = -y * np.log(h) - (1 - y) * np.log(1 - h)
+
+    print(J1)
     J = -(np.dot(np.transpose(y.reshape(-1, 1)), np.log(h.reshape(-1, 1))) +
-          np.dot(np.transpose(1 - y.reshape(-1, 1)), np.log(1 - h.reshape(-1, 1))) - Lambda * term / 2) / m
+          np.dot(np.transpose(1 - y.reshape(-1, 1)), np.log(1 - h.reshape(-1, 1))) - lambd * term / 2) / m
 
     print('Computing the error/cost, J, of the network')
     print('Processing training instance 1')
@@ -78,7 +78,7 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     Theta1[:, 0] = 0
     Theta2[:, 0] = 0
     gradient = (np.vstack((Theta1_grad.reshape(-1, 1), Theta2_grad.reshape(-1, 1))) +
-                Lambda * np.vstack((Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
+                lambd * np.vstack((Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
     print('The entire training set has been processes. Computing the average (regularized) gradients:')
     print('Final regularized gradients of Theta1:')
 
@@ -96,7 +96,7 @@ def sigmoid_gradient(z):
 
 
 if __name__ == "__main__":
-    Lambda = 0
+    lambd = 0
     input_layer_size = 1
     hidden_layer_size = 2
     num_labels = 1
@@ -106,4 +106,4 @@ if __name__ == "__main__":
     y = np.array([[0.9], [0.23]])
     y = y.reshape(-1, 1)
     nn_params = np.vstack((initial_Theta1.reshape(-1, 1), initial_Theta2.reshape(-1, 1)))
-    grad = nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, Lambda)
+    grad = nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, lambd)
