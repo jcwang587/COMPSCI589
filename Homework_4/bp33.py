@@ -70,13 +70,12 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
 
     Theta1[:, 0] = 0
     Theta2[:, 0] = 0
-    grad = (np.vstack((Theta1_grad.reshape(-1, 1), Theta2_grad.reshape(-1, 1))) +
-            Lambda * np.vstack((Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
-    return np.ravel(grad)
+    gradient = (np.vstack((Theta1_grad.reshape(-1, 1), Theta2_grad.reshape(-1, 1))) +
+                Lambda * np.vstack((Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
+    return np.ravel(gradient)
 
 
 def sigmoid(z):
-    h = np.zeros((len(z), 1))
     h = 1.0 / (1.0 + np.exp(-z))
     return h
 
