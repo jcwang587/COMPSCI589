@@ -23,8 +23,11 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     h = a3
     term = np.dot(np.transpose(np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1)))),
                   np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1))))
-    J = -(np.dot(np.transpose(y.reshape(-1, 1)), np.log(h.reshape(-1, 1))) + np.dot(
-        np.transpose(1 - y.reshape(-1, 1)), np.log(1 - h.reshape(-1, 1))) - Lambda * term / 2) / m
+    J1 = -np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) / m + Lambda * term / (2 * m)
+    cost1 = np.sum(np.power(Theta1_x, 2))
+    print(cost1)
+    J = -(np.dot(np.transpose(y.reshape(-1, 1)), np.log(h.reshape(-1, 1))) +
+          np.dot(np.transpose(1 - y.reshape(-1, 1)), np.log(1 - h.reshape(-1, 1))) - Lambda * term / 2) / m
 
     print('Computing the error/cost, J, of the network')
     print('Processing training instance 1')
@@ -51,11 +54,12 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     print('Expected output for instance 2: [%6.5f]' % y[1, 0])
     print('Cost, J, associated with instance 2: [%6.5f]' % J[0, 0])
     print('Final (regularized) cost, J, based on the complete training set: [%6.5f]' % J)
-
+    print('--------------------------------------------')
     delta3 = np.zeros((m, num_labels))
     delta2 = np.zeros((m, hidden_layer_size))
     Theta1_grad = []
     Theta2_grad = []
+    print('Running backpropagation')
     for i in range(m):
         Theta1_grad = np.zeros(Theta1.shape)
         Theta2_grad = np.zeros(Theta2.shape)
@@ -63,15 +67,21 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
         Theta2_grad = Theta2_grad + np.dot(np.transpose(delta3[i, :].reshape(1, -1)), a2[i, :].reshape(1, -1))
         delta2[i, :] = np.dot(delta3[i, :].reshape(1, -1), Theta2_x) * sigmoid_gradient(z2[i, :])
         Theta1_grad = Theta1_grad + np.dot(np.transpose(delta2[i, :].reshape(1, -1)), a1[i, :].reshape(1, -1))
-        print('Theta2_grad', Theta2_grad)
-        print('Theta1_grad', Theta1_grad)
-    print('delta3', delta3)
-    print('delta2', delta2)
-
+        print('Computing gradients based on training instance %1.0f' % (i + 1))
+        print('delta3: [%6.5f]' % delta3[i, 0])
+        print('delta2: [%6.5f %6.5f]' % (delta2[i, 0], delta2[i, 1]))
+        print('Gradients of Theta2 based on training instance %1.0f:' % (i + 1))
+        print('%6.5f %6.5f %6.5f' % (Theta2_grad[0, 0], Theta2_grad[0, 1], Theta2_grad[0, 2]))
+        print('Gradients of Theta1 based on training instance %1.0f:' % (i + 1))
+        print('%6.5f %6.5f' % (Theta1_grad[0, 0], Theta1_grad[0, 1]))
+        print('%6.5f %6.5f' % (Theta1_grad[1, 0], Theta1_grad[1, 1]))
     Theta1[:, 0] = 0
     Theta2[:, 0] = 0
     gradient = (np.vstack((Theta1_grad.reshape(-1, 1), Theta2_grad.reshape(-1, 1))) +
                 Lambda * np.vstack((Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
+    print('The entire training set has been processes. Computing the average (regularized) gradients:')
+    print('Final regularized gradients of Theta1:')
+
     return np.ravel(gradient)
 
 
