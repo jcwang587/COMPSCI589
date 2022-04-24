@@ -82,7 +82,7 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
         print('%6.5f %6.5f' % (Theta1_grad[1, 0], Theta1_grad[1, 1]))
     Theta1_grad_reg = Theta1_grad_reg / m
     Theta2_grad_reg = Theta2_grad_reg / m
-    print(Theta1_grad_reg)
+
     print('The entire training set has been processes. Computing the average (regularized) gradients:')
     print('Final regularized gradients of Theta1:')
     print('%6.5f %6.5f' % (Theta1_grad_reg[0, 0], Theta1_grad_reg[0, 1]))
