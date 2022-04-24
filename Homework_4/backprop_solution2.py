@@ -12,6 +12,7 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     Theta3 = nn_params[1][hidden_layer_size[1] * (hidden_layer_size[0] + 1):length2].reshape(num_labels,
                                                                                              hidden_layer_size[
                                                                                                  1] + 1).copy()
+
     m = X.shape[0]
     n = X.shape[1]
 
@@ -82,7 +83,6 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
         Theta1_grad = np.zeros(Theta1.shape)
         Theta2_grad = np.zeros(Theta2.shape)
         Theta3_grad = np.zeros(Theta3.shape)
-
         delta4[i, :] = h[i, :] - y.reshape(2, 2)[i, :]
         Theta3_grad = Theta3_grad + np.dot(np.transpose(delta4[i, :].reshape(1, -1)), a3[i, :].reshape(1, -1))
         delta3[i, :] = np.dot(delta4[i, :].reshape(1, -1), Theta3_x) * sigmoid_gradient(z3[i, :])
