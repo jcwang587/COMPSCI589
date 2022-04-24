@@ -80,6 +80,7 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
         print('Gradients of Theta1 based on training instance %1.0f:' % (i + 1))
         print('%6.5f %6.5f' % (Theta1_grad[0, 0], Theta1_grad[0, 1]))
         print('%6.5f %6.5f' % (Theta1_grad[1, 0], Theta1_grad[1, 1]))
+
     Theta1_grad_reg = Theta1_grad_reg / m
     Theta2_grad_reg = Theta2_grad_reg / m
 

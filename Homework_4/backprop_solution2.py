@@ -125,6 +125,7 @@ def nn_gradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y
     print('Final regularized gradients of Theta2:')
     print('%6.5f %6.5f %6.5f %6.5f %6.5f' % (Theta2_grad_reg[0, 0], Theta2_grad_reg[0, 1], Theta2_grad_reg[0, 2],
                                              Theta2_grad_reg[0, 3], Theta2_grad_reg[0, 4]))
+
     print('Final regularized gradients of Theta3:')
     print('%6.5f %6.5f %6.5f %6.5f' % (Theta3_grad_reg[0, 0], Theta3_grad_reg[0, 1], Theta3_grad_reg[0, 2],
                                        Theta3_grad_reg[0, 3]))
