@@ -5,7 +5,7 @@ from sklearn.metrics import classification_report
 
 
 class BPNNClassifier:
-    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200, activate_func="tanh"):
+    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200):
         self.feature_n = feature_n
         self.hidden_n = hidden_n
         self.deep = deep
@@ -15,9 +15,7 @@ class BPNNClassifier:
         self.weights = []
         self.gradients = list(range(deep))  # save the gradient of every neuron
         self.values = []  # save the activated value of every neuron
-        activate_funcs = \
-            {"tanh": (self.tanh, self.dtanh), "sigmoid": (self.sigmoid, self.dsigmoid)}
-        self.activate_func, self.dactivate_func = activate_funcs[activate_func]
+
         for d in range(deep):
             if d == 0:  # input layer to hidden layer
                 weight = np.random.randn(hidden_n, feature_n + 1)
@@ -33,20 +31,11 @@ class BPNNClassifier:
         weight = self.weights[deep]
         return X @ weight.T
 
-    def activation(self, z, func):
-        return func(z)
-
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
     def dsigmoid(self, h):
         return h * (1 - h)
-
-    def tanh(self, z):
-        return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
-
-    def dtanh(self, h):
-        return 1 - h ** 2
 
     def preproccessing(self, X=None, y=None):
         X_y = []
@@ -89,11 +78,11 @@ class BPNNClassifier:
         value = None
         for d in range(self.deep):
             if d == 0:  # input layer to hidden layer
-                value = self.activation(self.linear_input(d, X), self.activate_func)
+                value = self.sigmoid(self.linear_input(d, X))
             elif d == self.deep - 1:  # hidden layer to output layer, use sigmoid
-                value = self.activation(self.linear_input(d, value), self.sigmoid)
+                value = self.sigmoid(self.linear_input(d, value))
             else:  # the others
-                value = self.activation(self.linear_input(d, value), self.activate_func)
+                value = self.sigmoid(self.linear_input(d, value))
             self.values.append(value)
         return value
 
@@ -102,7 +91,7 @@ class BPNNClassifier:
             if d == self.deep - 1:  # hidden layer to output layer
                 self.gradients[d] = (y_true - self.values[d]) * self.dsigmoid(self.values[d])
             else:
-                self.gradients[d] = self.gradients[d + 1] @ self.weights[d + 1] * self.dactivate_func(self.values[d])
+                self.gradients[d] = self.gradients[d + 1] @ self.weights[d + 1] * self.dsigmoid(self.values[d])
 
     def standard_BP(self, X, y):
         for l in range(self.max_iter):
