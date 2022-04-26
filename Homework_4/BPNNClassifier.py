@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import classification_report
 
 
 def sigmoid(z):
@@ -10,6 +9,29 @@ def sigmoid(z):
 
 def d_sigmoid(h):
     return h * (1 - h)
+
+
+def accuracy_score(y_true, y_pred):
+    score = y_true == y_pred
+    return np.average(score)
+
+
+def precision_score(y_true, y_pred):
+    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
+    tp = [y_pred[i] for i in tp_tn_idx].count(1)
+    tp_fp = y_pred.count(1)
+    return tp / tp_fp
+
+
+def recall_score(y_true, y_pred):
+    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
+    tp = [y_pred[i] for i in tp_tn_idx].count(1)
+    tp_fn = y_true.tolist().count(1)
+    return tp / tp_fn
+
+
+def f1_score(precision_value, recall_value):
+    return 2 * precision_value * recall_value / (precision_value + recall_value)
 
 
 class BPNNClassifier:
@@ -157,7 +179,9 @@ if __name__ == "__main__":
     k_fold.append(df2.append(df1.append(df0)))
 
     iteration = 0
-    while iteration < 1:
+    accuracy = []
+    f1 = []
+    while iteration < 10:
         classLabel_rf_unzip = []
         # Split to train and test dataset
         k_fold_copy = k_fold.copy()
@@ -170,6 +194,10 @@ if __name__ == "__main__":
         y_test = data_test['# class'].values - 1
 
         classifier = BPNNClassifier(feature_n=13, hidden_n=7, deep=2, label_n=3).fit(X_train, y_train)
-        y_pred = classifier.predict(X_test)
-        print(classification_report(y_test, y_pred))
+        prediction = classifier.predict(X_test)
+        accuracy.append(accuracy_score(y_test, prediction))
+        prediction = prediction.tolist()
+        f1.append(f1_score(precision_score(y_test, prediction), recall_score(y_test, prediction)))
         iteration += 1
+    print("Accuracy:", np.mean(accuracy))
+    print("F1:", np.mean(f1))
