@@ -8,7 +8,7 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def dsigmoid(h):
+def d_sigmoid(h):
     return h * (1 - h)
 
 
@@ -91,9 +91,9 @@ class BPNNClassifier:
     def back_propagation(self, y_true):
         for d in range(self.deep - 1, -1, -1):
             if d == self.deep - 1:  # hidden layer to output layer
-                self.grad[d] = (y_true - self.values[d]) * dsigmoid(self.values[d])
+                self.grad[d] = (y_true - self.values[d]) * d_sigmoid(self.values[d])
             else:
-                self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * dsigmoid(self.values[d])
+                self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * d_sigmoid(self.values[d])
 
     def standard_bp(self, x, y):
         for _ in range(self.max_iter):
