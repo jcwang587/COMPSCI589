@@ -142,7 +142,7 @@ if __name__ == "__main__":
     df1 = df[df['# class'].isin([list_target[1]])]
     df0 = df[df['# class'].isin([list_target[2]])]
     # Split into folds
-    kfold = []
+    k_fold = []
     fold_size2 = int(len(df2) / 10)
     fold_size1 = int(len(df1) / 10)
     fold_size0 = int(len(df0) / 10)
@@ -153,22 +153,21 @@ if __name__ == "__main__":
         df2 = df2[~df2.index.isin(fold2.index)]
         df1 = df1[~df1.index.isin(fold1.index)]
         df0 = df0[~df0.index.isin(fold0.index)]
-        kfold.append(fold0)
-    kfold.append(df2.append(df1.append(df0)))
+        k_fold.append(fold0)
+    k_fold.append(df2.append(df1.append(df0)))
 
     iteration = 0
     while iteration < 1:
         classLabel_rf_unzip = []
         # Split to train and test dataset
-        kfold_copy = kfold.copy()
-        data_test = kfold[iteration]
-        del kfold_copy[iteration]
-        data_train = pd.concat(kfold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+        k_fold_copy = k_fold.copy()
+        data_test = k_fold[iteration]
+        del k_fold_copy[iteration]
+        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
         X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
         y_train = data_train['# class'].values - 1
         X_test = MinMaxScaler().fit_transform(data_test.drop('# class', axis=1).values)
         y_test = data_test['# class'].values - 1
-        # X = MinMaxScaler().fit_transform(kfold[iteration].iloc[:, :-1].values)
 
         classifier = BPNNClassifier(feature_n=13, hidden_n=7, deep=2, label_n=3).fit(X_train, y_train)
         y_pred = classifier.predict(X_test)
