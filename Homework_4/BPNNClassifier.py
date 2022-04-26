@@ -35,7 +35,7 @@ def f1_score(precision_value, recall_value):
 
 
 class BPNNClassifier:
-    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200):
+    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200, lambd=0):
         self.feature_n = feature_n
         self.hidden_n = hidden_n
         self.deep = deep
@@ -97,16 +97,16 @@ class BPNNClassifier:
             raise Exception("argument value error: ndarray ndim should be 1 or 2")
         return y_new
 
-    def forward_propagation(self, x):
+    def forward_propagation(self, x, lambd=0):
         self.values.clear()
         value = None
         for d in range(self.deep):
             if d == 0:  # input layer to hidden layer
-                value = sigmoid(self.linear_input(d, x))
+                value = sigmoid(self.linear_input(d, x)) + lambd
             elif d == self.deep - 1:  # hidden layer to output layer, use sigmoid
-                value = sigmoid(self.linear_input(d, value))
+                value = sigmoid(self.linear_input(d, value)) + lambd
             else:  # the others
-                value = sigmoid(self.linear_input(d, value))
+                value = sigmoid(self.linear_input(d, value)) + lambd
             self.values.append(value)
         return value
 
@@ -121,7 +121,7 @@ class BPNNClassifier:
         for _ in range(self.max_iter):
             for xi, yi in zip(x, y):
                 # forward propagation
-                self.forward_propagation(xi)
+                self.forward_propagation(xi, lambd=0)
                 # back propagation
                 self.back_propagation(yi)
                 # update weight
