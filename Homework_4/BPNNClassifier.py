@@ -4,6 +4,14 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report
 
 
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def dsigmoid(h):
+    return h * (1 - h)
+
+
 class BPNNClassifier:
     def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200):
         self.feature_n = feature_n
@@ -13,7 +21,7 @@ class BPNNClassifier:
         self.eta = eta
         self.max_iter = max_iter
         self.weights = []
-        self.gradients = list(range(deep))  # save the gradient of every neuron
+        self.grad = list(range(deep))  # save the gradient of every neuron
         self.values = []  # save the activated value of every neuron
 
         for d in range(deep):
@@ -27,26 +35,20 @@ class BPNNClassifier:
                 weight = np.random.randn(hidden_n, hidden_n)
             self.weights.append(weight)
 
-    def linear_input(self, deep, X):
+    def linear_input(self, deep, x):
         weight = self.weights[deep]
-        return X @ weight.T
+        return x @ weight.T
 
-    def sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
-
-    def dsigmoid(self, h):
-        return h * (1 - h)
-
-    def preproccessing(self, X=None, y=None):
-        X_y = []
-        if isinstance(X, np.ndarray):
-            X0 = np.array([[1] for i in range(X.shape[0])])
-            X = np.hstack([X0, X])
-            X_y.append(X)
+    def preprocessing(self, x=None, y=None):
+        x_y = []
+        if isinstance(x, np.ndarray):
+            x0 = np.array([[1] for _ in range(x.shape[0])])
+            x = np.hstack([x0, x])
+            x_y.append(x)
         if isinstance(y, np.ndarray):
             y = self.encoder(y)
-            X_y.append(y)
-        return tuple(X_y)
+            x_y.append(y)
+        return tuple(x_y)
 
     def encoder(self, y):
         y_new = []
@@ -73,57 +75,55 @@ class BPNNClassifier:
             raise Exception("argument value error: ndarray ndim should be 1 or 2")
         return y_new
 
-    def forward_propagation(self, X):
+    def forward_propagation(self, x):
         self.values.clear()
         value = None
         for d in range(self.deep):
             if d == 0:  # input layer to hidden layer
-                value = self.sigmoid(self.linear_input(d, X))
+                value = sigmoid(self.linear_input(d, x))
             elif d == self.deep - 1:  # hidden layer to output layer, use sigmoid
-                value = self.sigmoid(self.linear_input(d, value))
+                value = sigmoid(self.linear_input(d, value))
             else:  # the others
-                value = self.sigmoid(self.linear_input(d, value))
+                value = sigmoid(self.linear_input(d, value))
             self.values.append(value)
         return value
 
     def back_propagation(self, y_true):
         for d in range(self.deep - 1, -1, -1):
             if d == self.deep - 1:  # hidden layer to output layer
-                self.gradients[d] = (y_true - self.values[d]) * self.dsigmoid(self.values[d])
+                self.grad[d] = (y_true - self.values[d]) * dsigmoid(self.values[d])
             else:
-                self.gradients[d] = self.gradients[d + 1] @ self.weights[d + 1] * self.dsigmoid(self.values[d])
+                self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * dsigmoid(self.values[d])
 
-    def standard_BP(self, X, y):
-        for l in range(self.max_iter):
-            for Xi, yi in zip(X, y):
+    def standard_bp(self, x, y):
+        for _ in range(self.max_iter):
+            for xi, yi in zip(x, y):
                 # forward propagation
-                self.forward_propagation(Xi)
+                self.forward_propagation(xi)
                 # back propagation
                 self.back_propagation(yi)
                 # update weight
                 for d in range(self.deep):
                     if d == 0:  # input layer to hidden layer
-                        self.weights[d] += self.gradients[d].reshape(-1, 1) @ Xi.reshape(1, -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta
                     else:  # the others
-                        self.weights[d] += self.gradients[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
-                                                                                                         -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1, -1) * self.eta
 
-    def fit(self, X, y):
-        X, y = self.preproccessing(X, y)
-        self.standard_BP(X, y)
+    def fit(self, x, y):
+        x, y = self.preprocessing(x, y)
+        self.standard_bp(x, y)
         return self
 
-    def predict(self, X, probability=False):
-        X = self.preproccessing(X)[0]
-        prob = self.forward_propagation(X)
-        y = None
+    def predict(self, x, probability=False):
+        x = self.preprocessing(x)[0]
+        prob = self.forward_propagation(x)
         if self.label_n == 2:  # binary classification
             y = np.where(prob >= 0.5, 1, 0)
-        else:  # mutiply classification
+        else:  # multiply classification
             y = np.zeros(prob.shape)
             for yi, i in zip(y, np.argmax(prob, axis=1)):
                 yi[i] = 1
-        y = self.preproccessing(y=y)[0]
+        y = self.preprocessing(y=y)[0]
         if probability:
             return y, prob
         else:
