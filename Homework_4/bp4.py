@@ -1,78 +1,224 @@
+# _*_coding=utf-8 _*_
+
+from functools import reduce
 import numpy as np
-import pandas as pd
 
 
-def calculate_loss(model):
-    W1, b1, W2, b2 = model['W1'], model['b1'], model['W2'], model['b2']
-    # Forward propagation to calculate our predictions
-    z1 = X.dot(W1) + b1
-    a1 = np.tanh(z1)
-    z2 = a1.dot(W2) + b2
-    exp_scores = np.exp(z2)
-    probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
-    # Calculating the loss
-    corect_logprobs = -np.log(probs[range(num_examples), y])
-    data_loss = np.sum(corect_logprobs)
-    # Add regulatization term to loss
-    data_loss += reg_lambda / 2 * (np.sum(np.square(W1)) + np.sum(np.square(W2)))
-    return 1. / num_examples * data_loss
+class SigmoidActivator(object):
+    @staticmethod
+    def forward(weighted_input):
+        return 1.0 / (1.0 + np.exp(-weighted_input))
+
+    @staticmethod
+    def backward(output):
+        return output * (1 - output)
 
 
-def predict(model, x):
-    W1, b1, W2, b2 = model['W1'], model['b1'], model['W2'], model['b2']
-    # Forward propagation
-    z1 = x.dot(W1) + b1
-    a1 = np.tanh(z1)
-    z2 = a1.dot(W2) + b2
-    exp_scores = np.exp(z2)
-    probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
-    return np.argmax(probs, axis=1)
+class FullConnectedLayer(object):
+    def __init__(self, input_size, output_size,
+                 activator):
+        """
+        # 全连接层实现类
+        构造函数
+        input_size: 本层输入向量的维度
+        output_size: 本层输出向量的维度
+        activator: **函数
+        """
+        self.input_size = input_size
+        self.output_size = output_size
+        self.activator = activator
+        # 权重数组W
+        self.W = np.random.uniform(-0.1, 0.1, (output_size, input_size))
+        # 偏置项b
+        self.b = np.zeros((output_size, 1))
+        # 输出向量
+        self.output = np.zeros((output_size, 1))
+
+        self.input = None
+        self.delta = None
+        self.W_grad = None
+        self.b_grad = None
+
+    def forward(self, input_array):
+        """
+        前向计算
+        input_array: 输入向量，维度必须等于input_size
+        """
+        # 式2
+        self.input = input_array
+        self.output = self.activator.forward(
+            np.dot(self.W, input_array) + self.b)
+
+    def backward(self, delta_array):
+        """
+        反向计算W和b的梯度
+        delta_array: 从上一层传递过来的误差项
+        """
+        # 式8
+        self.delta = self.activator.backward(self.input) * np.dot(
+            self.W.T, delta_array)
+        self.W_grad = np.dot(delta_array, self.input.T)
+        self.b_grad = delta_array
+
+    def update(self, learning_rate):
+        """
+        使用梯度下降算法更新权重
+        """
+        self.W += learning_rate * self.W_grad
+        self.b += learning_rate * self.b_grad
+
+    def dump(self):
+        print('W: %s\nb:%s' % (self.W, self.b))
 
 
-def build_model(nn_hdim, num_passes=20000, print_loss=False):
-    np.random.seed(0)
-    W1 = np.random.randn(nn_input_dim, nn_hdim) / np.sqrt(nn_input_dim)
-    b1 = np.zeros((1, nn_hdim))
-    W2 = np.random.randn(nn_hdim, nn_output_dim) / np.sqrt(nn_hdim)
-    b2 = np.zeros((1, nn_output_dim))
-    model = {}
-    for i in range(0, num_passes):
-        z1 = X.dot(W1) + b1
-        a1 = np.tanh(z1)
-        z2 = a1.dot(W2) + b2
-        exp_scores = np.exp(z2)
-        probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
-        delta3 = probs
-        delta3[range(num_examples), y] -= 1
-        dW2 = (a1.T).dot(delta3)
-        db2 = np.sum(delta3, axis=0, keepdims=True)
-        delta2 = delta3.dot(W2.T) * (1 - np.power(a1, 2))
-        dW1 = np.dot(X.T, delta2)
-        db1 = np.sum(delta2, axis=0)
-        dW2 += reg_lambda * W2
-        dW1 += reg_lambda * W1
-        W1 += -epsilon * dW1
-        b1 += -epsilon * db1
-        W2 += -epsilon * dW2
-        b2 += -epsilon * db2
-        model = {'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
-        if print_loss and i % 1000 == 0:
-            print("Loss after iteration %i: %f" % (i, calculate_loss(model)))
-            print(a1)
-            print(z2)
-            print(delta3)
-    return model
+# 神经网络类
+class Network(object):
+    def __init__(self, layers):
+        """
+        构造函数
+        """
+        self.layers = []
+        for i in range(len(layers) - 1):
+            self.layers.append(FullConnectedLayer(layers[i], layers[i + 1], SigmoidActivator()))
+
+    def predict(self, sample):
+        """
+        使用神经网络实现预测
+        sample: 输入样本
+        """
+        output = sample
+        for layer in self.layers:
+            layer.forward(output)
+            output = layer.output
+        return output
+
+    def train(self, labels, data_set, rate, epoch):
+        """
+        训练函数
+        labels: 样本标签
+        data_set: 输入样本
+        rate: 学习速率
+        epoch: 训练轮数
+        """
+        for i in range(epoch):
+            for d in range(len(data_set)):
+                self.train_one_sample(labels[d], data_set[d], rate)
+
+    def train_one_sample(self, label, sample, rate):
+        self.predict(sample)
+        self.calc_gradient(label)
+        self.update_weight(rate)
+
+    def calc_gradient(self, label):
+        delta = self.layers[-1].activator.backward(self.layers[-1].output) * (label - self.layers[-1].output)
+        for layer in self.layers[::-1]:
+            layer.backward(delta)
+            delta = layer.delta
+        return delta
+
+    def update_weight(self, rate):
+        for layer in self.layers:
+            layer.update(rate)
+
+    def dump(self):
+        for layer in self.layers:
+            layer.dump()
+
+    @staticmethod
+    def loss(output, label):
+        return 0.5 * ((label - output) * (label - output)).sum()
+
+    def gradient_check(self, sample_feature, sample_label):
+        """
+        梯度检查
+        network: 神经网络对象
+        sample_feature: 样本的特征
+        sample_label: 样本的标签
+        """
+
+        # 获取网络在当前样本下每个连接的梯度
+        self.predict(sample_feature)
+        self.calc_gradient(sample_label)
+
+        # 检查梯度
+        epsilon = 10e-4
+        for fc in self.layers:
+            for i in range(fc.W.shape[0]):
+                for j in range(fc.W.shape[1]):
+                    fc.W[i, j] += epsilon
+                    output = self.predict(sample_feature)
+                    err1 = self.loss(sample_label, output)
+                    fc.W[i, j] -= 2 * epsilon
+                    output = self.predict(sample_feature)
+                    err2 = self.loss(sample_label, output)
+                    expect_grad = (err1 - err2) / (2 * epsilon)
+                    fc.W[i, j] += epsilon
+                    print('weights(%d,%d): expected - actural %.4e - %.4e' % (
+                        i, j, expect_grad, fc.W_grad[i, j]))
 
 
-dataset = pd.read_csv('example1.csv')
-dataset = dataset.values
-X = dataset[:, :-1]
-y = dataset[:, -1]
+def transpose(args):
+    return list(map(lambda arg: list(map(lambda line: np.array(line).reshape(len(line), 1), arg)), args))
 
-num_examples = len(X)  # training set size
-nn_input_dim = 1  # input layer dimensionality
-nn_output_dim = 1  # output layer dimensionality
 
-epsilon = 0.01  # learning rate for gradient descent
-reg_lambda = 0  # regularization strength
-model = build_model(2, print_loss=True)
+class Normalizer(object):
+    def __init__(self):
+        self.mask = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80]
+
+    def norm(self, number):
+        data = list(map(lambda m: 0.9 if number & m else 0.1, self.mask))
+        return np.array(data).reshape(8, 1)
+
+    def denorm(self, vec):
+        binary = list(map(lambda _i: 1 if _i > 0.5 else 0, vec[:, 0]))
+        for i in range(len(self.mask)):
+            binary[i] = binary[i] * self.mask[i]
+        return reduce(lambda x, y: x + y, binary)
+
+
+def train_data_set():
+    normalizer = Normalizer()
+    data_set = []
+    labels = []
+    for i in range(0, 256):
+        n = normalizer.norm(i)
+        data_set.append(n)
+        labels.append(n)
+    return labels, data_set
+
+
+def correct_ratio(network):
+    normalizer = Normalizer()
+    correct = 0.0
+    for i in range(256):
+        if normalizer.denorm(network.predict(normalizer.norm(i))) == i:
+            correct += 1.0
+    print('correct_ratio: %.2f%%' % (correct / 256 * 100))
+
+
+def test():
+    labels, data_set = transpose(train_data_set())
+    net = Network([8, 3, 8])
+    rate = 0.5
+    mini_batch = 20
+    epoch = 10
+    for i in range(epoch):
+        net.train(labels, data_set, rate, mini_batch)
+        print('after epoch %d loss: %f' % ((i + 1), net.loss(labels[-1], net.predict(data_set[-1]))))
+        rate /= 2
+    correct_ratio(net)
+
+
+def gradient_check():
+    """
+    梯度检查
+    """
+    labels, data_set = transpose(train_data_set())
+    net = Network([8, 3, 5, 7, 8])
+    net.gradient_check(data_set[0], labels[0])
+    return net
+
+
+if __name__ == '__main__':
+    test()
+    gradient_check()
