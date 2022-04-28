@@ -156,11 +156,11 @@ class BPNNClassifier:
 
 if __name__ == "__main__":
     # Load data
-    df = pd.read_csv('hw3_house_votes_84.csv')
+    df = pd.read_csv('hw3_cancer.csv', sep='\t')
     # Split the original dataset
-    list_target = df['class'].unique()
-    df1 = df[df['class'].isin([list_target[0]])]
-    df0 = df[df['class'].isin([list_target[1]])]
+    list_target = df['Class'].unique()
+    df1 = df[df['Class'].isin([list_target[0]])]
+    df0 = df[df['Class'].isin([list_target[1]])]
     # Split into folds
     k_fold = []
     fold_size1 = math.ceil(len(df1) / 10)
@@ -191,13 +191,13 @@ if __name__ == "__main__":
                 data_test = k_fold[fold_idx]
                 del k_fold_copy[fold_idx]
                 data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-                X_train = MinMaxScaler().fit_transform(data_train.drop('class', axis=1).values)
-                y_train = data_train['class'].values
-                X_test = MinMaxScaler().fit_transform(data_test.drop('class', axis=1).values)
-                y_test = data_test['class'].values
+                X_train = MinMaxScaler().fit_transform(data_train.drop('Class', axis=1).values)
+                y_train = data_train['Class'].values
+                X_test = MinMaxScaler().fit_transform(data_test.drop('Class', axis=1).values)
+                y_test = data_test['Class'].values
 
                 # Train the model and predict
-                classifier = BPNNClassifier(in_n=16, hid_l=ai[0], hid_n=ai[1], out_n=2, lmbda=ai[2]).fit(X_train, y_train)
+                classifier = BPNNClassifier(in_n=9, hid_l=ai[0], hid_n=ai[1], out_n=2, lmbda=ai[2]).fit(X_train, y_train)
                 prediction = classifier.predict(X_test)
 
                 final_true = np.array(y_test.tolist())
