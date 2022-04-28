@@ -35,12 +35,13 @@ def f1_score(precision_value, recall_value):
 
 
 class BPNNClassifier:
-    def __init__(self, in_n, hid_l=1, hid_n=4, out_n=2, lmb=1, max_iter=200):
+    def __init__(self, in_n, hid_l=1, hid_n=4, out_n=2, eta=0.1, lmbda=0.02, max_iter=200):
         self.in_n = in_n
         self.hid_l = hid_l + 1
         self.hid_n = hid_n
         self.out_n = out_n
-        self.lmb = lmb
+        self.eta = eta
+        self.lmbda = lmbda
         self.max_iter = max_iter
         self.weights = []
         self.grad = list(range(self.hid_l))  # save the gradient of every neuron
@@ -118,7 +119,6 @@ class BPNNClassifier:
                 self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * d_sigmoid(self.values[d])
 
     def standard_bp(self, x, y):
-        m = x.shape[0]
         for _ in range(self.max_iter):
             for xi, yi in zip(x, y):
                 # forward propagation
@@ -128,10 +128,11 @@ class BPNNClassifier:
                 # update weight
                 for d in range(self.hid_l):
                     if d == 0:  # input layer to hidden layer
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.lmb / m
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
-                                                                                                    -1) * self.lmb / m
+                                                                                                    -1) * self.eta * (
+                                                       1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -180,9 +181,11 @@ if __name__ == "__main__":
         k_fold.append(fold0)
     k_fold.append(df2.append(df1.append(df0)))
 
-    architecture = [[1, 4, 2], [1, 4, 200], [1, 16, 2], [1, 16, 200],
-                    [3, 4, 2], [3, 4, 200], [3, 16, 2], [3, 16, 200]]
-
+    architecture = [[1, 2, 0.001], [1, 2, 0.05], [1, 4, 0.001], [1, 4, 0.05], [1, 8, 0.001], [1, 8, 0.05],
+                    [2, 2, 0.001], [2, 2, 0.05], [2, 4, 0.001], [2, 4, 0.05], [2, 8, 0.001], [2, 8, 0.05],
+                    [4, 2, 0.001], [4, 2, 0.05], [4, 4, 0.001], [4, 4, 0.05], [4, 8, 0.001], [4, 8, 0.05]]
+    overall_accuracy = []
+    overall_f1 = []
     for ai in architecture:
         fold_idx = 0
         accuracy = []
@@ -201,7 +204,8 @@ if __name__ == "__main__":
                 y_test = data_test['# class'].values - 1
 
                 # Train the model and predict
-                classifier = BPNNClassifier(in_n=13, hid_l=ai[0], hid_n=ai[1], out_n=3, lmb=ai[2]).fit(X_train, y_train)
+                classifier = BPNNClassifier(in_n=13, hid_l=ai[0], hid_n=ai[1], out_n=3, lmbda=ai[2]).fit(X_train,
+                                                                                                         y_train)
                 prediction = classifier.predict(X_test)
 
                 final_true = y_test.tolist()
@@ -245,3 +249,7 @@ if __name__ == "__main__":
 
         print("Accuracy:", np.mean(accuracy))
         print("F1:", np.mean(f1))
+        overall_accuracy.append(np.mean(accuracy))
+        overall_f1.append(np.mean(f1))
+    table = np.insert(np.array(architecture), 3, values=np.array(overall_accuracy), axis=1)
+    table = np.insert(np.array(table), 4, values=np.array(overall_f1), axis=1)
