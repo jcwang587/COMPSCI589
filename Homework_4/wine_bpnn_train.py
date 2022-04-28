@@ -180,8 +180,8 @@ if __name__ == "__main__":
         k_fold.append(fold0)
     k_fold.append(df2.append(df1.append(df0)))
 
-    architecture = [[1, 4, 2], [1, 4, 100], [1, 16, 2], [1, 16, 200],
-                    [3, 4, 2], [3, 4, 100], [3, 16, 2], [3, 16, 200]]
+    architecture = [[1, 4, 2], [1, 4, 200], [1, 16, 2], [1, 16, 200],
+                    [3, 4, 2], [3, 4, 200], [3, 16, 2], [3, 16, 200]]
 
     for ai in architecture:
         fold_idx = 0
