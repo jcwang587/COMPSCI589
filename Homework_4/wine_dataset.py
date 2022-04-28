@@ -2,7 +2,9 @@
 # coding=utf-8
 import numpy
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 
 def loss_derivative(output_activations, y):
@@ -87,7 +89,8 @@ class BP:
                 self.update_batch(batch, learning_rate)
             if (validation_data != None):
                 val_pre = self.predict(validation_data[0])
-                print("Epoch", j + 1, '/', epochs, '  val loss:%12.12f' % mean_squared_error(val_pre, validation_data[1]))
+                print("Epoch", j + 1, '/', epochs,
+                      '  val loss:%12.12f' % mean_squared_error(val_pre, validation_data[1]))
 
 
 def load_data(step):
@@ -98,16 +101,43 @@ def load_data(step):
 
 if __name__ == "__main__":
     numpy.random.seed(7)
-    step = 500
+
+    # Load data
+    df = pd.read_csv('hw3_wine.csv', sep='\t')
+    col_class = df.pop('# class')
+    df.insert(len(df.columns), '# class', col_class)
+    col_mean = df.mean().tolist()
+
+    list_target = df['# class'].unique()
+    df2 = df[df['# class'].isin([list_target[0]])]
+    df1 = df[df['# class'].isin([list_target[1]])]
+    df0 = df[df['# class'].isin([list_target[2]])]
+    # Split into folds
+    k_fold = []
+    fold_size2 = int(len(df2) / 10)
+    fold_size1 = int(len(df1) / 10)
+    fold_size0 = int(len(df0) / 10)
+    for k in range(0, 9):
+        fold2 = df2.sample(n=fold_size2)
+        fold1 = fold2.append(df1.sample(n=fold_size1))
+        fold0 = fold1.append(df0.sample(n=fold_size0))
+        df2 = df2[~df2.index.isin(fold2.index)]
+        df1 = df1[~df1.index.isin(fold1.index)]
+        df0 = df0[~df0.index.isin(fold0.index)]
+        k_fold.append(fold0)
+    k_fold.append(df2.append(df1.append(df0)))
+    k_fold_copy = k_fold.copy()
+    data_test = k_fold[0]
+    del k_fold_copy[0]
+    data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+    X_train = np.array(MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values))
+    y_train = np.array(data_train['# class'].values - 1)
+    X_test = np.array(MinMaxScaler().fit_transform(data_test.drop('# class', axis=1).values))
+    y_test = np.array(data_test['# class'].values - 1)
+
     beta = 1e-3
-    layer = [1, 32, 64, 128, 32, 1]
-    x, y = load_data(step)
-    data = [(np.array([x_value]), np.array([y_value])) for x_value, y_value in zip(x, y)]
+    layer = [13, 10, 3]
+    data = [(np.array([x_value]), np.array([y_value])) for x_value, y_value in zip(X_train, y_train)]
     model = BP(layer, tanh, tanh_derivative, loss_derivative)
-    model.fit(train_data=data, epochs=2000, batch_size=64, learning_rate=beta, validation_data=(x, y))
-    predict = model.predict(x)
-    plt.plot(x, y, "-r", linewidth=2, label='origin')
-    plt.plot(x, predict, "-b", linewidth=1, label='predict')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    model.fit(train_data=data, epochs=100, batch_size=20, learning_rate=beta, validation_data=(X_test, y_train))
+    predict = model.predict(X_test)

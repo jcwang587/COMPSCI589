@@ -192,7 +192,6 @@ if __name__ == "__main__":
         f1 = []
         while fold_idx < 10:
             try:
-                classLabel_rf_unzip = []
                 # Split to train and test dataset
                 k_fold_copy = k_fold.copy()
                 data_test = k_fold[fold_idx]
