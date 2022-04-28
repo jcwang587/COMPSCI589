@@ -1,150 +1,155 @@
-# -*- coding: utf-8 -*-
 import numpy as np
+from scipy.io import loadmat
+from scipy.optimize import minimize
+from sklearn.preprocessing import OneHotEncoder
+import scipy.io as scio
 
 
-# 代价函数
-def nnCostFunction(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, Lambda):
-    length = nn_params.shape[0]  # theta的中长度
-    # 还原theta1和theta2
-    Theta1 = nn_params[0:hidden_layer_size * (input_layer_size + 1)].reshape(hidden_layer_size, input_layer_size + 1)
-    Theta2 = nn_params[hidden_layer_size * (input_layer_size + 1):length].reshape(num_labels, hidden_layer_size + 1)
+def load_data(path, transpose=True):
+    data = loadmat(path)
+    y = data.get('y')  # (5000,1)
 
-    # np.savetxt("Theta1.csv",Theta1,delimiter=',')
+    X = data.get('X')  # (5000,400)
 
+    if transpose:
+        # for this dataset, you need a transpose to get the orientation right
+        X = np.array([im.reshape((20, 20)).T for im in X])
+
+        # and I flat the image again to preserve the vector presentation
+        X = np.array([im.reshape(400) for im in X])
+
+    return X, y
+
+def sigmoid_gradient(z):
+    return np.multiply(sigmoid(z), (1 - sigmoid(z)))
+
+
+def sigmoid(z):  # sigmoid的导函数
+    return 1 / (1 + np.exp(-z))
+
+
+def forward_propagate(X, theta1, theta2):
+    m = X.shape[0]  # m = 5000
+    a1 = np.insert(X, 0, values=np.ones(m), axis=1)  # input layer
+    z2 = a1 * theta1.T
+    a2 = np.insert(sigmoid(z2), 0, values=np.ones(m), axis=1)  # hidden layer
+    z3 = a2 * theta2.T
+    h = sigmoid(z3)  # h.shape(5000,10)
+    return a1, z2, a2, z3, h
+
+
+def cost(params, input_size, hidden_size, num_labels, X, y, learning_rate):
+    m = X.shape[0]  # 5000,input_size = 400+1; hidden_size = 25+1
+    X = np.mat(X)
+    y = np.mat(y)
+
+    # reshape the parameter array into parameter matrices for each layer
+    theta1 = np.mat(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+    # params未指定起始位置，默认从零开始，其中params为theta一共的个数，[:25*(400+1)]reshape为(25,400+1)的矩阵格式
+    theta2 = np.mat(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    # params中剩下的为theta2中的值
+    # run the feed-forward pass
+    a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
+
+    # compute the cost
+    J = 0
+    for i in range(m):  # m = 5000,multiply为点乘
+        first_term = np.multiply(-y[i, :], np.log(h[i, :]))  # h.shape 为 5000，10
+        second_term = np.multiply((1 - y[i, :]), np.log(1 - h[i, :]))
+        J += np.sum(first_term - second_term)
+    J = J / m
+    # add the cost regularization term
+    J += (float(learning_rate) / (2 * m)) * (np.sum(np.power(theta1[:, 1:], 2)) + np.sum(np.power(theta2[:, 1:], 2)))
+    return J
+
+
+def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
     m = X.shape[0]
-    class_y = np.zeros((m, num_labels))  # 数据的y对应0-9，需要映射为0/1的关系
-    # 映射y
-    for i in range(num_labels):
-        class_y[:, i] = np.int32(y == i).reshape(1, -1)  # 注意reshape(1,-1)才可以赋值
+    X = np.mat(X)
+    y = np.mat(y)
 
-    '''去掉theta1和theta2的第一列，因为正则化时从1开始'''
-    Theta1_colCount = Theta1.shape[1]
-    Theta1_x = Theta1[:, 1:Theta1_colCount]
-    Theta2_colCount = Theta2.shape[1]
-    Theta2_x = Theta2[:, 1:Theta2_colCount]
-    # 正则化向theta^2
-    term = np.dot(np.transpose(np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1)))),
-                  np.vstack((Theta1_x.reshape(-1, 1), Theta2_x.reshape(-1, 1))))
+    # reshape the parameter array into parameter matrices for each layer
+    theta1 = np.mat(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+    theta2 = np.mat(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
 
-    '''正向传播,每次需要补上一列1的偏置bias'''
-    a1 = np.hstack((np.ones((m, 1)), X))
-    z2 = np.dot(a1, np.transpose(Theta1))
-    a2 = sigmoid(z2)
-    a2 = np.hstack((np.ones((m, 1)), a2))
-    z3 = np.dot(a2, np.transpose(Theta2))
-    h = sigmoid(z3)
-    '''代价'''
-    J = -(np.dot(np.transpose(class_y.reshape(-1, 1)), np.log(h.reshape(-1, 1))) + np.dot(
-        np.transpose(1 - class_y.reshape(-1, 1)), np.log(1 - h.reshape(-1, 1))) - Lambda * term / 2) / m
-    # temp1 = (h.reshape(-1,1)-class_y.reshape(-1,1))
-    # temp2 = (temp1**2).sum()
-    # J = 1/(2*m)*temp2
-    return np.ravel(J)
+    # run the feed-forward pass
+    a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
 
+    # initializations
+    J = 0
+    delta1 = np.zeros(theta1.shape)  # (25, 401)
+    delta2 = np.zeros(theta2.shape)  # (10, 26)
 
-# 梯度
-def nnGradient(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, Lambda):
-    length = nn_params.shape[0]
-    Theta1 = nn_params[0:hidden_layer_size * (input_layer_size + 1)].reshape(hidden_layer_size,
-                                                                             input_layer_size + 1).copy()
-    # 这里使用copy函数，否则下面修改Theta的值，nn_params也会一起修改
-    Theta2 = nn_params[hidden_layer_size * (input_layer_size + 1):length].reshape(num_labels,
-                                                                                  hidden_layer_size + 1).copy()
-    m = X.shape[0]
-    class_y = np.zeros((m, num_labels))  # 数据的y对应0-9，需要映射为0/1的关系
-    # 映射y
-    for i in range(num_labels):
-        class_y[:, i] = np.int32(y == i).reshape(1, -1)  # 注意reshape(1,-1)才可以赋值
-
-    '''去掉theta1和theta2的第一列，因为正则化时从1开始'''
-    Theta1_colCount = Theta1.shape[1]
-    Theta1_x = Theta1[:, 1:Theta1_colCount]
-    Theta2_colCount = Theta2.shape[1]
-    Theta2_x = Theta2[:, 1:Theta2_colCount]
-
-    Theta1_grad = np.zeros((Theta1.shape))  # 第一层到第二层的权重
-    Theta2_grad = np.zeros((Theta2.shape))  # 第二层到第三层的权重
-
-    '''正向传播，每次需要补上一列1的偏置bias'''
-    a1 = np.hstack((np.ones((m, 1)), X))
-    z2 = np.dot(a1, np.transpose(Theta1))
-    a2 = sigmoid(z2)
-    a2 = np.hstack((np.ones((m, 1)), a2))
-    z3 = np.dot(a2, np.transpose(Theta2))
-    h = sigmoid(z3)
-
-    '''反向传播，delta为误差，'''
-    delta3 = np.zeros((m, num_labels))
-    delta2 = np.zeros((m, hidden_layer_size))
+    # compute the cost
     for i in range(m):
-        # delta3[i,:] = (h[i,:]-class_y[i,:])*sigmoidGradient(z3[i,:])  # 均方误差的误差率
-        delta3[i, :] = h[i, :] - class_y[i, :]  # 交叉熵误差率
-        Theta2_grad = Theta2_grad + np.dot(np.transpose(delta3[i, :].reshape(1, -1)), a2[i, :].reshape(1, -1))
-        delta2[i, :] = np.dot(delta3[i, :].reshape(1, -1), Theta2_x) * sigmoidGradient(z2[i, :])
-        Theta1_grad = Theta1_grad + np.dot(np.transpose(delta2[i, :].reshape(1, -1)), a1[i, :].reshape(1, -1))
+        first_term = np.multiply(-y[i, :], np.log(h[i, :]))
+        second_term = np.multiply((1 - y[i, :]), np.log(1 - h[i, :]))
+        J += np.sum(first_term - second_term)
 
-    Theta1[:, 0] = 0
-    Theta2[:, 0] = 0
-    '''梯度'''
-    grad = (np.vstack((Theta1_grad.reshape(-1, 1), Theta2_grad.reshape(-1, 1))) + Lambda * np.vstack(
-        (Theta1.reshape(-1, 1), Theta2.reshape(-1, 1)))) / m
-    return np.ravel(grad)
+    J = J / m
+
+    # add the cost regularization term
+    J += (float(learning_rate) / (2 * m)) * (np.sum(np.power(theta1[:, 1:], 2)) + np.sum(np.power(theta2[:, 1:], 2)))
+
+    # perform backpropagation
+    for t in range(m):
+        a1t = a1[t, :]  # (1, 401)
+        z2t = z2[t, :]  # (1, 25)
+        a2t = a2[t, :]  # (1, 26)
+        ht = h[t, :]  # (1, 10)
+        yt = y[t, :]  # (1, 10)
+
+        d3t = ht - yt  # (1, 10)
+        # 详见吴恩达机器学习笔记P135页，反向传播算法的过程
+        z2t = np.insert(z2t, 0, values=np.ones(1))  # (1, 26)
+        d2t = np.multiply((theta2.T * d3t.T).T, sigmoid_gradient(z2t))  # (1, 26)
+
+        delta1 = delta1 + (d2t[:, 1:]).T * a1t
+        delta2 = delta2 + d3t.T * a2t
+
+    delta1 = delta1 / m  # 计算0时
+    delta2 = delta2 / m
+
+    # add the gradient regularization term
+    delta1[:, 1:] = delta1[:, 1:] + (theta1[:, 1:] * learning_rate) / m  # 计算非零时
+    delta2[:, 1:] = delta2[:, 1:] + (theta2[:, 1:] * learning_rate) / m
+
+    # unravel the gradient matrices into a single array
+    grad = np.concatenate((np.ravel(delta1), np.ravel(delta2)))
+    # axis=0 按照行拼接。默认为axis=0
+    # axis=1 按照列拼接
+    return J, grad
 
 
-# S型函数
-def sigmoid(z):
-    h = np.zeros((len(z), 1))  # 初始化，与z的长度一致
-
-    h = 1.0 / (1.0 + np.exp(-z))
-    return h
-
-
-# S型函数导数
-def sigmoidGradient(z):
-    g = sigmoid(z) * (1 - sigmoid(z))
-    return g
-
-
-# 初始化调试的theta权重
-def debugInitializeWeights(fan_in, fan_out):
-    W = np.zeros((fan_out, fan_in + 1))
-    x = np.arange(1, fan_out * (fan_in + 1) + 1)
-    W = np.sin(x).reshape(W.shape) / 10
-    return W
+X, y = load_data('ex4data1.mat')
+encoder = OneHotEncoder(sparse=False)
+y_onehot = encoder.fit_transform(y)
+input_size = 400
+hidden_size = 25
+num_labels = 10
+learning_rate = 1
+# 随机初始化完整网络参数大小的参数数组
+params = (np.random.random(size=hidden_size * (input_size + 1) + num_labels * (hidden_size + 1)) - 0.5) * 0.25
+# np.random.random(n)产生n个0--1之间的随机数,上式中产生的随机数为-0.5到0.5再*0.25
+# 一共产生了，25*（400+1）+10*（25+1）个（theta的总个数）
 
 
-if __name__ == "__main__":
-    Lambda = 0
-    '''构造一个小型的神经网络验证，因为数值法计算梯度很浪费时间，而且验证正确后之后就不再需要验证了'''
-    input_layer_size = 1
-    hidden_layer_size = 2
-    num_labels = 1
-    m = 5
-    initial_Theta1 = debugInitializeWeights(input_layer_size, hidden_layer_size);
-    initial_Theta2 = debugInitializeWeights(hidden_layer_size, num_labels)
-    X = debugInitializeWeights(input_layer_size - 1, m)
-    y = np.transpose(np.mod(np.arange(1, m + 1), num_labels))  # 初始化y
+theta1 = np.mat(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+theta2 = np.mat(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+fmin = minimize(fun=backprop, x0=params, args=(input_size, hidden_size, num_labels, X, y_onehot, learning_rate),
+                method='TNC', jac=True, options={'maxiter': 250})
 
-    y = y.reshape(-1, 1)
-    nn_params = np.vstack((initial_Theta1.reshape(-1, 1), initial_Theta2.reshape(-1, 1)))  # 展开theta
-    '''BP求出梯度'''
-    grad = nnGradient(nn_params, input_layer_size, hidden_layer_size,
-                      num_labels, X, y, Lambda)
-    '''使用数值法计算梯度'''
-    num_grad = np.zeros((nn_params.shape[0]))
-    step = np.zeros((nn_params.shape[0]))
-    e = 1e-4
-    for i in range(nn_params.shape[0]):
-        step[i] = e
-        loss1 = nnCostFunction(nn_params - step.reshape(-1, 1), input_layer_size, hidden_layer_size,
-                               num_labels, X, y,
-                               Lambda)
-        loss2 = nnCostFunction(nn_params + step.reshape(-1, 1), input_layer_size, hidden_layer_size,
-                               num_labels, X, y,
-                               Lambda)
-        num_grad[i] = (loss2 - loss1) / (2 * e)
-        step[i] = 0
-    # 显示两列比较
-    res = np.hstack((num_grad.reshape(-1, 1), grad.reshape(-1, 1)))
-    print("检查梯度的结果，第一列为数值法计算得到的，第二列为BP得到的:")
-    print(res)
+
+X = np.mat(X)
+theta1 = np.mat(np.reshape(fmin.x[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+theta2 = np.mat(np.reshape(fmin.x[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+
+
+a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
+y_pred = np.array(np.argmax(h, axis=1) + 1)
+correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
+accuracy = (sum(map(int, correct)) / float(len(correct)))
+print('accuracy = {0}%'.format(accuracy * 100))
+scio.savemat('theta1.mat', {'theta1': theta1})
+scio.savemat('theta2.mat', {'theta2': theta2})
+print('保存成功')

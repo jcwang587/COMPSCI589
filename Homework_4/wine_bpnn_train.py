@@ -35,30 +35,30 @@ def f1_score(precision_value, recall_value):
 
 
 class BPNNClassifier:
-    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200, lambd=0):
-        self.feature_n = feature_n
-        self.hidden_n = hidden_n
-        self.deep = deep
-        self.label_n = label_n
-        self.eta = eta
+    def __init__(self, in_n, hid_l=1, hid_n=4, out_n=2, lmb=1, max_iter=200):
+        self.in_n = in_n
+        self.hid_l = hid_l + 1
+        self.hid_n = hid_n
+        self.out_n = out_n
+        self.lmb = lmb
         self.max_iter = max_iter
         self.weights = []
-        self.grad = list(range(deep))  # save the gradient of every neuron
+        self.grad = list(range(self.hid_l))  # save the gradient of every neuron
         self.values = []  # save the activated value of every neuron
 
-        for d in range(deep):
+        for d in range(self.hid_l):
             if d == 0:  # input layer to hidden layer
-                weight = np.random.randn(hidden_n, feature_n + 1)
-            elif d == self.deep - 1:  # hidden layer to output layer
-                label_n = 1 if label_n == 2 else label_n
-                weight = np.random.randn(label_n, hidden_n)
+                weight = np.random.randn(self.hid_n, in_n + 1)
+            elif d == self.hid_l - 1:  # hidden layer to output layer
+                out_n = 1 if out_n == 2 else out_n
+                weight = np.random.randn(out_n, self.hid_n)
             else:  # the others
-                label_n = 1 if label_n == 2 else label_n
-                weight = np.random.randn(hidden_n, hidden_n)
+                out_n = 1 if out_n == 2 else out_n
+                weight = np.random.randn(self.hid_n, self.hid_n)
             self.weights.append(weight)
 
-    def linear_input(self, deep, x):
-        weight = self.weights[deep]
+    def linear_input(self, hid_l, x):
+        weight = self.weights[hid_l]
         return x @ weight.T
 
     def preprocessing(self, x=None, y=None):
@@ -75,16 +75,16 @@ class BPNNClassifier:
     def encoder(self, y):
         y_new = []
         if y.ndim == 1:  # encode y to one hot code
-            if self.label_n > 2:
+            if self.out_n > 2:
                 for yi in y:
-                    yi_new = np.zeros(self.label_n)
+                    yi_new = np.zeros(self.out_n)
                     yi_new[yi] = 1
                     y_new.append(yi_new)
                 y_new = np.array(y_new)
             else:
                 y_new = y
         elif y.ndim == 2:  # encode y to 1D array
-            if self.label_n > 2:
+            if self.out_n > 2:
                 for yi in y:
                     for j in range(len(yi)):
                         if yi[j] == 1:
@@ -97,39 +97,41 @@ class BPNNClassifier:
             raise Exception("argument value error: ndarray ndim should be 1 or 2")
         return y_new
 
-    def forward_propagation(self, x, lambd=0):
+    def forward_propagation(self, x):
         self.values.clear()
         value = None
-        for d in range(self.deep):
+        for d in range(self.hid_l):
             if d == 0:  # input layer to hidden layer
-                value = sigmoid(self.linear_input(d, x)) + lambd
-            elif d == self.deep - 1:  # hidden layer to output layer, use sigmoid
-                value = sigmoid(self.linear_input(d, value)) + lambd
+                value = sigmoid(self.linear_input(d, x))
+            elif d == self.hid_l - 1:  # hidden layer to output layer, use sigmoid
+                value = sigmoid(self.linear_input(d, value))
             else:  # the others
-                value = sigmoid(self.linear_input(d, value)) + lambd
+                value = sigmoid(self.linear_input(d, value))
             self.values.append(value)
         return value
 
     def back_propagation(self, y_true):
-        for d in range(self.deep - 1, -1, -1):
-            if d == self.deep - 1:  # hidden layer to output layer
+        for d in range(self.hid_l - 1, -1, -1):
+            if d == self.hid_l - 1:  # hidden layer to output layer
                 self.grad[d] = (y_true - self.values[d]) * d_sigmoid(self.values[d])
             else:
                 self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * d_sigmoid(self.values[d])
 
     def standard_bp(self, x, y):
+        m = x.shape[0]
         for _ in range(self.max_iter):
             for xi, yi in zip(x, y):
                 # forward propagation
-                self.forward_propagation(xi, lambd=0)
+                self.forward_propagation(xi)
                 # back propagation
                 self.back_propagation(yi)
                 # update weight
-                for d in range(self.deep):
+                for d in range(self.hid_l):
                     if d == 0:  # input layer to hidden layer
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.lmb / m
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1, -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
+                                                                                                    -1) * self.lmb / m
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -139,7 +141,7 @@ class BPNNClassifier:
     def predict(self, x, probability=False):
         x = self.preprocessing(x)[0]
         prob = self.forward_propagation(x)
-        if self.label_n == 2:  # binary classification
+        if self.out_n == 2:  # binary classification
             y = np.where(prob >= 0.5, 1, 0)
         else:  # multiply classification
             y = np.zeros(prob.shape)
@@ -178,26 +180,68 @@ if __name__ == "__main__":
         k_fold.append(fold0)
     k_fold.append(df2.append(df1.append(df0)))
 
-    iteration = 0
-    accuracy = []
-    f1 = []
-    while iteration < 10:
-        classLabel_rf_unzip = []
-        # Split to train and test dataset
-        k_fold_copy = k_fold.copy()
-        data_test = k_fold[iteration]
-        del k_fold_copy[iteration]
-        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-        X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
-        y_train = data_train['# class'].values - 1
-        X_test = MinMaxScaler().fit_transform(data_test.drop('# class', axis=1).values)
-        y_test = data_test['# class'].values - 1
+    architecture = [[1, 4, 2], [1, 4, 100], [1, 16, 2], [1, 16, 200],
+                    [3, 4, 2], [3, 4, 100], [3, 16, 2], [3, 16, 200]]
 
-        classifier = BPNNClassifier(feature_n=13, hidden_n=7, deep=2, label_n=3).fit(X_train, y_train)
-        prediction = classifier.predict(X_test)
-        accuracy.append(accuracy_score(y_test, prediction))
-        prediction = prediction.tolist()
-        f1.append(f1_score(precision_score(y_test, prediction), recall_score(y_test, prediction)))
-        iteration += 1
-    print("Accuracy:", np.mean(accuracy))
-    print("F1:", np.mean(f1))
+    for ai in architecture:
+        fold_idx = 0
+        accuracy = []
+        f1 = []
+        while fold_idx < 10:
+            try:
+                classLabel_rf_unzip = []
+                # Split to train and test dataset
+                k_fold_copy = k_fold.copy()
+                data_test = k_fold[fold_idx]
+                del k_fold_copy[fold_idx]
+                data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+                X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
+                y_train = data_train['# class'].values - 1
+                X_test = MinMaxScaler().fit_transform(data_test.drop('# class', axis=1).values)
+                y_test = data_test['# class'].values - 1
+
+                # Train the model and predict
+                classifier = BPNNClassifier(in_n=13, hid_l=ai[0], hid_n=ai[1], out_n=3, lmb=ai[2]).fit(X_train, y_train)
+                prediction = classifier.predict(X_test)
+
+                final_true = y_test.tolist()
+                final_prediction = prediction.tolist()
+
+                # Calculate metrics
+                final_prediction_1 = [2 if i == 1 else i for i in final_prediction]
+                final_prediction_1 = [1 if i == 0 else i for i in final_prediction_1]
+                final_prediction_1 = [0 if i == 2 else i for i in final_prediction_1]
+                final_true_1 = [2 if i == 1 else i for i in final_true]
+                final_true_1 = [1 if i == 0 else i for i in final_true_1]
+                final_true_1 = np.array([0 if i == 2 else i for i in final_true_1])
+                accuracy1 = accuracy_score(final_true_1, final_prediction_1)
+                precision1 = precision_score(final_true_1, final_prediction_1)
+                recall1 = recall_score(final_true_1, final_prediction_1)
+                f11 = 2 * (precision1 * recall1) / (precision1 + recall1)
+
+                final_prediction_2 = [0 if i == 2 else i for i in final_prediction]
+                final_true_2 = np.array([0 if i == 2 else i for i in final_true])
+                accuracy2 = accuracy_score(final_true_2, final_prediction_2)
+                precision2 = precision_score(final_true_2, final_prediction_2)
+                recall2 = recall_score(final_true_2, final_prediction_2)
+                f12 = 2 * (precision2 * recall2) / (precision2 + recall2)
+
+                final_prediction_3 = [0 if i == 1 else i for i in final_prediction]
+                final_prediction_3 = [1 if i == 2 else i for i in final_prediction_3]
+                final_true_3 = [0 if i == 1 else i for i in final_true]
+                final_true_3 = np.array([1 if i == 2 else i for i in final_true_3])
+                accuracy3 = accuracy_score(final_true_3, final_prediction_3)
+                precision3 = precision_score(final_true_3, final_prediction_3)
+                recall3 = recall_score(final_true_3, final_prediction_3)
+                f13 = 2 * (precision3 * recall3) / (precision3 + recall3)
+
+                accuracy = np.mean([accuracy1, accuracy2, accuracy3])
+                f1 = np.mean([f11, f12, f13])
+                fold_idx += 1
+                print('kfold index: ', fold_idx)
+            except:
+                pass
+                continue
+
+        print("Accuracy:", np.mean(accuracy))
+        print("F1:", np.mean(f1))
