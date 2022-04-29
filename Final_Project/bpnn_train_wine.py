@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
-
+from sklearn import datasets
+import numpy as np
+import matplotlib.pyplot as plt
 
 def minmax_scale(data):
     mins = data.min(0)
@@ -139,8 +141,9 @@ class BPNNClassifier:
                     if d == 0:  # input layer to hidden layer
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ \
-                                           self.values[d - 1].reshape(1, -1) * self.eta * (1 - self.lmbda)
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
+                                                                                                    -1) * self.eta * (
+                                                       1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -165,15 +168,19 @@ class BPNNClassifier:
 
 if __name__ == "__main__":
     # Load data
-    df = pd.read_csv('hw3_wine.csv', sep='\t')
-    col_class = df.pop('# class')
-    df.insert(len(df.columns), '# class', col_class)
+    digits = datasets.load_digits(return_X_y=True)
+    digits_dataset_X = digits[0]
+    digits_dataset_y = digits[1]
+    digits_dataset = np.c_[digits_dataset_X, digits_dataset_y.T]
+    df = pd.DataFrame(digits_dataset)
+    col_class = df.pop(64)
+    df.insert(len(df.columns), 64, col_class)
     col_mean = df.mean().tolist()
 
-    list_target = df['# class'].unique()
-    df2 = df[df['# class'].isin([list_target[0]])]
-    df1 = df[df['# class'].isin([list_target[1]])]
-    df0 = df[df['# class'].isin([list_target[2]])]
+    list_target = df[64].unique()
+    df2 = df[df[64].isin([list_target[0]])]
+    df1 = df[df[64].isin([list_target[1]])]
+    df0 = df[df[64].isin([list_target[2]])]
     # Split into folds
     k_fold = []
     fold_size2 = int(len(df2) / 10)
@@ -189,74 +196,57 @@ if __name__ == "__main__":
         k_fold.append(fold0)
     k_fold.append(df2.append(df1.append(df0)))
 
-    architecture = [[1, 2, 0.001], [1, 2, 0.05], [1, 4, 0.001], [1, 4, 0.05], [1, 8, 0.001], [1, 8, 0.05],
-                    [2, 2, 0.001], [2, 2, 0.05], [2, 4, 0.001], [2, 4, 0.05], [2, 8, 0.001], [2, 8, 0.05],
-                    [4, 2, 0.001], [4, 2, 0.05], [4, 4, 0.001], [4, 4, 0.05], [4, 8, 0.001], [4, 8, 0.05]]
-    overall_accuracy = []
-    overall_f1 = []
-    for ai in architecture:
-        fold_idx = 0
-        accuracy = []
-        f1 = []
-        while fold_idx < 10:
-            try:
-                # Split to train and test dataset
-                k_fold_copy = k_fold.copy()
-                data_test = k_fold[fold_idx]
-                del k_fold_copy[fold_idx]
-                data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-                X_train = minmax_scale(data_train.drop('# class', axis=1).values)
-                y_train = data_train['# class'].values - 1
-                X_test = minmax_scale(data_test.drop('# class', axis=1).values)
-                y_test = data_test['# class'].values - 1
+    fold_idx = 0
+    # while fold_idx < 10:
+    # Split to train and test dataset
+    k_fold_copy = k_fold.copy()
+    data_test = k_fold[fold_idx]
+    del k_fold_copy[fold_idx]
+    data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+    X_train = minmax_scale(data_train.drop(64, axis=1).values)
+    y_train = data_train[64].values
+    X_test = minmax_scale(data_test.drop(64, axis=1).values)
+    y_test = data_test[64].values
 
-                # Train the model and predict
-                classifier = BPNNClassifier(in_n=13, hid_l=ai[0], hid_n=ai[1], out_n=3, lmbda=ai[2]).fit(X_train,
-                                                                                                         y_train)
-                prediction = classifier.predict(X_test)
+    # Train the model and predict
+    classifier = BPNNClassifier(in_n=64, hid_l=4, hid_n=4, out_n=10, lmbda=0.05).fit(X_train, y_train)
+    prediction = classifier.predict(X_test)
 
-                final_true = y_test.tolist()
-                final_prediction = prediction.tolist()
+    final_true = y_test.tolist()
+    final_prediction = prediction.tolist()
 
-                # Calculate metrics
-                final_prediction_1 = [2 if i == 1 else i for i in final_prediction]
-                final_prediction_1 = [1 if i == 0 else i for i in final_prediction_1]
-                final_prediction_1 = [0 if i == 2 else i for i in final_prediction_1]
-                final_true_1 = [2 if i == 1 else i for i in final_true]
-                final_true_1 = [1 if i == 0 else i for i in final_true_1]
-                final_true_1 = np.array([0 if i == 2 else i for i in final_true_1])
-                accuracy1 = accuracy_score(final_true_1, final_prediction_1)
-                precision1 = precision_score(final_true_1, final_prediction_1)
-                recall1 = recall_score(final_true_1, final_prediction_1)
-                f11 = 2 * (precision1 * recall1) / (precision1 + recall1)
+    # Calculate metrics
+    final_prediction_1 = [2 if i == 1 else i for i in final_prediction]
+    final_prediction_1 = [1 if i == 0 else i for i in final_prediction_1]
+    final_prediction_1 = [0 if i == 2 else i for i in final_prediction_1]
+    final_true_1 = [2 if i == 1 else i for i in final_true]
+    final_true_1 = [1 if i == 0 else i for i in final_true_1]
+    final_true_1 = np.array([0 if i == 2 else i for i in final_true_1])
+    accuracy1 = accuracy_score(final_true_1, final_prediction_1)
+    precision1 = precision_score(final_true_1, final_prediction_1)
+    recall1 = recall_score(final_true_1, final_prediction_1)
+    f11 = 2 * (precision1 * recall1) / (precision1 + recall1)
 
-                final_prediction_2 = [0 if i == 2 else i for i in final_prediction]
-                final_true_2 = np.array([0 if i == 2 else i for i in final_true])
-                accuracy2 = accuracy_score(final_true_2, final_prediction_2)
-                precision2 = precision_score(final_true_2, final_prediction_2)
-                recall2 = recall_score(final_true_2, final_prediction_2)
-                f12 = 2 * (precision2 * recall2) / (precision2 + recall2)
+    final_prediction_2 = [0 if i == 2 else i for i in final_prediction]
+    final_true_2 = np.array([0 if i == 2 else i for i in final_true])
+    accuracy2 = accuracy_score(final_true_2, final_prediction_2)
+    precision2 = precision_score(final_true_2, final_prediction_2)
+    recall2 = recall_score(final_true_2, final_prediction_2)
+    f12 = 2 * (precision2 * recall2) / (precision2 + recall2)
 
-                final_prediction_3 = [0 if i == 1 else i for i in final_prediction]
-                final_prediction_3 = [1 if i == 2 else i for i in final_prediction_3]
-                final_true_3 = [0 if i == 1 else i for i in final_true]
-                final_true_3 = np.array([1 if i == 2 else i for i in final_true_3])
-                accuracy3 = accuracy_score(final_true_3, final_prediction_3)
-                precision3 = precision_score(final_true_3, final_prediction_3)
-                recall3 = recall_score(final_true_3, final_prediction_3)
-                f13 = 2 * (precision3 * recall3) / (precision3 + recall3)
+    final_prediction_3 = [0 if i == 1 else i for i in final_prediction]
+    final_prediction_3 = [1 if i == 2 else i for i in final_prediction_3]
+    final_true_3 = [0 if i == 1 else i for i in final_true]
+    final_true_3 = np.array([1 if i == 2 else i for i in final_true_3])
+    accuracy3 = accuracy_score(final_true_3, final_prediction_3)
+    precision3 = precision_score(final_true_3, final_prediction_3)
+    recall3 = recall_score(final_true_3, final_prediction_3)
+    f13 = 2 * (precision3 * recall3) / (precision3 + recall3)
 
-                accuracy = np.mean([accuracy1, accuracy2, accuracy3])
-                f1 = np.mean([f11, f12, f13])
-                fold_idx += 1
-                print('kfold index: ', fold_idx)
-            except:
-                pass
-                continue
+    accuracy = np.mean([accuracy1, accuracy2, accuracy3])
+    f1 = np.mean([f11, f12, f13])
+    fold_idx += 1
+    print('kfold index: ', fold_idx)
 
-        print("Accuracy:", np.mean(accuracy))
-        print("F1:", np.mean(f1))
-        overall_accuracy.append(np.mean(accuracy))
-        overall_f1.append(np.mean(f1))
-    table = np.insert(np.array(architecture), 3, values=np.array(overall_accuracy), axis=1)
-    table = np.insert(np.array(table), 4, values=np.array(overall_f1), axis=1)
+    print("Accuracy:", np.mean(accuracy))
+    print("F1:", np.mean(f1))
