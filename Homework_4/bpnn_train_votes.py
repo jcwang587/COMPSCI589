@@ -200,9 +200,9 @@ if __name__ == "__main__":
                 data_test = k_fold[fold_idx]
                 del k_fold_copy[fold_idx]
                 data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-                X_train = MinMaxScaler().fit_transform(data_train.drop('class', axis=1).values)
+                X_train = minmax_scale(data_train.drop('class', axis=1).values)
                 y_train = data_train['class'].values
-                X_test = MinMaxScaler().fit_transform(data_test.drop('class', axis=1).values)
+                X_test = minmax_scale(data_test.drop('class', axis=1).values)
                 y_test = data_test['class'].values
 
                 # Train the model and predict
