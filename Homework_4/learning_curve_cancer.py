@@ -143,7 +143,7 @@ class BPNNClassifier:
                     else:  # the others
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
                                                                                                     -1) * self.eta * (
-                                                       1 - self.lmbda)
+                                                   1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -168,11 +168,11 @@ class BPNNClassifier:
 
 if __name__ == "__main__":
     # Load data
-    df = pd.read_csv('hw3_house_votes_84.csv')
+    df = pd.read_csv('hw3_cancer.csv', sep='\t')
     # Split the original dataset
-    list_target = df['class'].unique()
-    df1 = df[df['class'].isin([list_target[0]])]
-    df0 = df[df['class'].isin([list_target[1]])]
+    list_target = df['Class'].unique()
+    df1 = df[df['Class'].isin([list_target[0]])]
+    df0 = df[df['Class'].isin([list_target[1]])]
     # Split into folds
     k_fold = []
     fold_size1 = math.ceil(len(df1) / 10)
@@ -203,7 +203,7 @@ if __name__ == "__main__":
             y_train = data_train['# class'].values
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
-            classifier = BPNNClassifier(in_n=16, hid_l=4, hid_n=4, out_n=2, lmbda=0.001).fit(X_train, y_train)
+            classifier = BPNNClassifier(in_n=9, hid_l=1, hid_n=8, out_n=2, lmbda=0.05).fit(X_train, y_train)
             [prediction, probability] = classifier.predict(X_test, probability=True)
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
@@ -216,5 +216,5 @@ if __name__ == "__main__":
     plt.xlabel('Value of ntree')
     plt.ylabel('Accuracy of the random forest')
     plt.title('The Wine Dataset')
-    plt.savefig("learning_curve_cancer.eps", dpi=600, format="eps")
+    plt.savefig("learning_curve_votes.eps", dpi=600, format="eps")
     plt.show()
