@@ -1,7 +1,16 @@
 import numpy as np
 import pandas as pd
 import math
-from sklearn.preprocessing import MinMaxScaler
+
+
+def minmax_scale(data):
+    mins = data.min(0)
+    maxs = data.max(0)
+    ranges = maxs - mins
+    row = data.shape[0]
+    normData = data - np.tile(mins, (row, 1))
+    normData = normData / np.tile(ranges, (row, 1))
+    return normData
 
 
 def sigmoid(z):
@@ -131,7 +140,9 @@ class BPNNClassifier:
                     if d == 0:  # input layer to hidden layer
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1, -1) * self.eta * (1 - self.lmbda)
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
+                                                                                                    -1) * self.eta * (
+                                                   1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -191,13 +202,14 @@ if __name__ == "__main__":
                 data_test = k_fold[fold_idx]
                 del k_fold_copy[fold_idx]
                 data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-                X_train = MinMaxScaler().fit_transform(data_train.drop('Class', axis=1).values)
+                X_train = minmax_scale(data_train.drop('Class', axis=1).values)
                 y_train = data_train['Class'].values
-                X_test = MinMaxScaler().fit_transform(data_test.drop('Class', axis=1).values)
+                X_test = minmax_scale(data_test.drop('Class', axis=1).values)
                 y_test = data_test['Class'].values
 
                 # Train the model and predict
-                classifier = BPNNClassifier(in_n=9, hid_l=ai[0], hid_n=ai[1], out_n=2, lmbda=ai[2]).fit(X_train, y_train)
+                classifier = BPNNClassifier(in_n=9, hid_l=ai[0], hid_n=ai[1], out_n=2, lmbda=ai[2]).fit(X_train,
+                                                                                                        y_train)
                 prediction = classifier.predict(X_test)
 
                 final_true = np.array(y_test.tolist())

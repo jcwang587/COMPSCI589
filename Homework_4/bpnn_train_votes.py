@@ -1,7 +1,16 @@
 import numpy as np
 import pandas as pd
 import math
-from sklearn.preprocessing import MinMaxScaler
+
+
+def minmax_scale(data):
+    mins = data.min(0)
+    maxs = data.max(0)
+    ranges = maxs - mins
+    row = data.shape[0]
+    normData = data - np.tile(mins, (row, 1))
+    normData = normData / np.tile(ranges, (row, 1))
+    return normData
 
 
 def sigmoid(z):
