@@ -35,30 +35,31 @@ def f1_score(precision_value, recall_value):
 
 
 class BPNNClassifier:
-    def __init__(self, feature_n, hidden_n=10, deep=2, label_n=2, eta=0.1, max_iter=200, lambd=0):
-        self.feature_n = feature_n
-        self.hidden_n = hidden_n
-        self.deep = deep
-        self.label_n = label_n
+    def __init__(self, in_n, hid_l=1, hid_n=4, out_n=2, eta=0.1, lmbda=0.02, max_iter=200):
+        self.in_n = in_n
+        self.hid_l = hid_l + 1
+        self.hid_n = hid_n
+        self.out_n = out_n
         self.eta = eta
+        self.lmbda = lmbda
         self.max_iter = max_iter
         self.weights = []
-        self.grad = list(range(deep))  # save the gradient of every neuron
+        self.grad = list(range(self.hid_l))  # save the gradient of every neuron
         self.values = []  # save the activated value of every neuron
 
-        for d in range(deep):
+        for d in range(self.hid_l):
             if d == 0:  # input layer to hidden layer
-                weight = np.random.randn(hidden_n, feature_n + 1)
-            elif d == self.deep - 1:  # hidden layer to output layer
-                label_n = 1 if label_n == 2 else label_n
-                weight = np.random.randn(label_n, hidden_n)
+                weight = np.random.randn(self.hid_n, in_n + 1)
+            elif d == self.hid_l - 1:  # hidden layer to output layer
+                out_n = 1 if out_n == 2 else out_n
+                weight = np.random.randn(out_n, self.hid_n)
             else:  # the others
-                label_n = 1 if label_n == 2 else label_n
-                weight = np.random.randn(hidden_n, hidden_n)
+                out_n = 1 if out_n == 2 else out_n
+                weight = np.random.randn(self.hid_n, self.hid_n)
             self.weights.append(weight)
 
-    def linear_input(self, deep, x):
-        weight = self.weights[deep]
+    def linear_input(self, hid_l, x):
+        weight = self.weights[hid_l]
         return x @ weight.T
 
     def preprocessing(self, x=None, y=None):
@@ -75,16 +76,16 @@ class BPNNClassifier:
     def encoder(self, y):
         y_new = []
         if y.ndim == 1:  # encode y to one hot code
-            if self.label_n > 2:
+            if self.out_n > 2:
                 for yi in y:
-                    yi_new = np.zeros(self.label_n)
+                    yi_new = np.zeros(self.out_n)
                     yi_new[yi] = 1
                     y_new.append(yi_new)
                 y_new = np.array(y_new)
             else:
                 y_new = y
         elif y.ndim == 2:  # encode y to 1D array
-            if self.label_n > 2:
+            if self.out_n > 2:
                 for yi in y:
                     for j in range(len(yi)):
                         if yi[j] == 1:
@@ -97,22 +98,22 @@ class BPNNClassifier:
             raise Exception("argument value error: ndarray ndim should be 1 or 2")
         return y_new
 
-    def forward_propagation(self, x, lambd=0):
+    def forward_propagation(self, x):
         self.values.clear()
         value = None
-        for d in range(self.deep):
+        for d in range(self.hid_l):
             if d == 0:  # input layer to hidden layer
-                value = sigmoid(self.linear_input(d, x)) + lambd
-            elif d == self.deep - 1:  # hidden layer to output layer, use sigmoid
-                value = sigmoid(self.linear_input(d, value)) + lambd
+                value = sigmoid(self.linear_input(d, x))
+            elif d == self.hid_l - 1:  # hidden layer to output layer, use sigmoid
+                value = sigmoid(self.linear_input(d, value))
             else:  # the others
-                value = sigmoid(self.linear_input(d, value)) + lambd
+                value = sigmoid(self.linear_input(d, value))
             self.values.append(value)
         return value
 
     def back_propagation(self, y_true):
-        for d in range(self.deep - 1, -1, -1):
-            if d == self.deep - 1:  # hidden layer to output layer
+        for d in range(self.hid_l - 1, -1, -1):
+            if d == self.hid_l - 1:  # hidden layer to output layer
                 self.grad[d] = (y_true - self.values[d]) * d_sigmoid(self.values[d])
             else:
                 self.grad[d] = self.grad[d + 1] @ self.weights[d + 1] * d_sigmoid(self.values[d])
@@ -121,15 +122,17 @@ class BPNNClassifier:
         for _ in range(self.max_iter):
             for xi, yi in zip(x, y):
                 # forward propagation
-                self.forward_propagation(xi, lambd=0)
+                self.forward_propagation(xi)
                 # back propagation
                 self.back_propagation(yi)
                 # update weight
-                for d in range(self.deep):
+                for d in range(self.hid_l):
                     if d == 0:  # input layer to hidden layer
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1, -1) * self.eta
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
+                                                                                                    -1) * self.eta * (
+                                                   1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -139,7 +142,7 @@ class BPNNClassifier:
     def predict(self, x, probability=False):
         x = self.preprocessing(x)[0]
         prob = self.forward_propagation(x)
-        if self.label_n == 2:  # binary classification
+        if self.out_n == 2:  # binary classification
             y = np.where(prob >= 0.5, 1, 0)
         else:  # multiply classification
             y = np.zeros(prob.shape)
@@ -190,13 +193,13 @@ if __name__ == "__main__":
     y_test = data_test['# class'].values - 1
     J_loop = []
     J_final = []
-    for n_sample in range(1, len(y_train)):
+    for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
             X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
-            classifier = BPNNClassifier(feature_n=13, hidden_n=7, deep=2, label_n=3).fit(X_train, y_train)
+            classifier = BPNNClassifier(in_n=13, hid_l=2, hid_n=2, out_n=3, lmbda=0.05).fit(X_train, y_train)
             [prediction, probability] = classifier.predict(X_test, probability=True)
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
@@ -204,8 +207,3 @@ if __name__ == "__main__":
         print(n_sample)
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
-
-    # classifier = BPNNClassifier(feature_n=13, hidden_n=7, deep=2, label_n=3).fit(X_train, y_train)
-    # [prediction, probability] = classifier.predict(X_test, probability=True)
-    # J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
-    # print('J =', J)
