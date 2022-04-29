@@ -196,15 +196,15 @@ if __name__ == "__main__":
     data_test = k_fold[0]
     del k_fold_copy[0]
     data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-    X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
+    X_train = minmax_scale(data_train.drop('# class', axis=1).values)
     y_train = data_train['# class'].values - 1
-    X_test = MinMaxScaler().fit_transform(data_test.drop('# class', axis=1).values)
+    X_test = minmax_scale(data_test.drop('# class', axis=1).values)
     y_test = data_test['# class'].values - 1
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
-            X_train = MinMaxScaler().fit_transform(data_train.drop('# class', axis=1).values)
+            X_train = minmax_scale(data_train.drop('# class', axis=1).values)
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
