@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import math
+import matplotlib.pyplot as plt
 
 
 def minmax_scale(data):
@@ -208,3 +209,10 @@ if __name__ == "__main__":
         print(n_sample)
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
+
+    plt.plot(range(1, len(y_train), 5), J_final, '.-', markersize=10, color='#1f77b4', label='Accuracy')
+    plt.xlabel('Value of ntree')
+    plt.ylabel('Accuracy of the random forest')
+    plt.title('The Wine Dataset')
+    plt.savefig("learning_curve_votes.eps", dpi=600, format="eps")
+    plt.show()
