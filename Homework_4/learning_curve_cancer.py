@@ -200,7 +200,7 @@ if __name__ == "__main__":
             y_train = data_train['Class'].values
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
-            classifier = BPNNClassifier(in_n=9, hid_l=1, hid_n=8, out_n=2, lmbda=0.05).fit(X_train, y_train)
+            classifier = BPNNClassifier(in_n=9, hid_l=2, hid_n=4, out_n=2, lmbda=0.001).fit(X_train, y_train)
             [prediction, probability] = classifier.predict(X_test, probability=True)
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
