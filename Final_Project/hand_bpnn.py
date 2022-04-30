@@ -3,8 +3,8 @@ from sklearn import datasets
 import numpy as np
 
 
-def minmax_scale(df):
-    df_norm = (df - df.min()) / (df.max() - df.min())
+def minmax_scale(df_in):
+    df_norm = (df_in - df_in.min()) / (df_in.max() - df_in.min())
     return df_norm
 
 
