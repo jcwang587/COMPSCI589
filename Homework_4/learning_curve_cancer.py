@@ -4,14 +4,9 @@ import math
 import matplotlib.pyplot as plt
 
 
-def minmax_scale(data):
-    mins = data.min(0)
-    maxs = data.max(0)
-    ranges = maxs - mins
-    row = data.shape[0]
-    normData = data - np.tile(mins, (row, 1))
-    normData = normData / np.tile(ranges, (row, 1))
-    return normData
+def minmax_scale(df_in):
+    df_norm = (df_in - df_in.min()) / (df_in.max() - df_in.min())
+    return df_norm
 
 
 def sigmoid(z):
@@ -141,9 +136,8 @@ class BPNNClassifier:
                     if d == 0:  # input layer to hidden layer
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
-                                                                                                    -1) * self.eta * (
-                                                   1 - self.lmbda)
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ \
+                                           self.values[d - 1].reshape(1, -1) * self.eta * (1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -169,7 +163,10 @@ class BPNNClassifier:
 if __name__ == "__main__":
     # Load data
     df = pd.read_csv('hw3_cancer.csv', sep='\t')
-    # Split the original dataset
+    col_class = df.pop('Class')
+    df = minmax_scale(df)
+    df.insert(len(df.columns), 'Class', col_class)
+
     list_target = df['Class'].unique()
     df1 = df[df['Class'].isin([list_target[0]])]
     df0 = df[df['Class'].isin([list_target[1]])]
@@ -191,15 +188,15 @@ if __name__ == "__main__":
     data_test = k_fold[0]
     del k_fold_copy[0]
     data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-    X_train = minmax_scale(data_train.drop('class', axis=1).values)
+    X_train = data_train.drop('class', axis=1).values
     y_train = data_train['class'].values
-    X_test = minmax_scale(data_test.drop('class', axis=1).values)
+    X_test = data_test.drop('class', axis=1).values
     y_test = data_test['class'].values
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
-            X_train = minmax_scale(data_train.drop('# class', axis=1).values)
+            X_train = data_train.drop('# class', axis=1).values
             y_train = data_train['# class'].values
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)

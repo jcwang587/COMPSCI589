@@ -140,9 +140,8 @@ class BPNNClassifier:
                     if d == 0:  # input layer to hidden layer
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
-                                                                                                    -1) * self.eta * (
-                                                   1 - self.lmbda)
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ \
+                                           self.values[d - 1].reshape(1, -1) * self.eta * (1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)

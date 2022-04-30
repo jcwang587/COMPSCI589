@@ -135,9 +135,8 @@ class BPNNClassifier:
                     if d == 0:  # input layer to hidden layer
                         self.weights[d] += self.grad[d].reshape(-1, 1) @ xi.reshape(1, -1) * self.eta * (1 - self.lmbda)
                     else:  # the others
-                        self.weights[d] += self.grad[d].reshape(-1, 1) @ self.values[d - 1].reshape(1,
-                                                                                                    -1) * self.eta * (
-                                                   1 - self.lmbda)
+                        self.weights[d] += self.grad[d].reshape(-1, 1) @ \
+                                           self.values[d - 1].reshape(1, -1) * self.eta * (1 - self.lmbda)
 
     def fit(self, x, y):
         x, y = self.preprocessing(x, y)
@@ -200,7 +199,7 @@ if __name__ == "__main__":
     J_final = []
     for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
-            X_train = minmax_scale(data_train.drop('# class', axis=1).values)
+            X_train = data_train.drop('# class', axis=1).values
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
