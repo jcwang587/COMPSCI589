@@ -204,7 +204,6 @@ if __name__ == "__main__":
             [prediction, probability] = classifier.predict(X_test, probability=True)
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
-            print(loop)
         print(len(data_train['Class'].values)-n_sample, ' samples')
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
