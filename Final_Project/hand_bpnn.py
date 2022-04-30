@@ -1,8 +1,6 @@
-import numpy as np
 import pandas as pd
 from sklearn import datasets
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def minmax_scale(df):
@@ -170,6 +168,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(digits_dataset)
     col_class = df.pop(64)
     df = minmax_scale(df)
+    df = df.drop(df.columns[[0, 32, 39]], axis=1)
     df.insert(len(df.columns), 64, col_class)
     col_mean = df.mean().tolist()
 
@@ -228,21 +227,13 @@ if __name__ == "__main__":
     data_test = k_fold[fold_idx]
     del k_fold_copy[fold_idx]
     data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-    X_train = minmax_scale(data_train.drop(64, axis=1).values)
+    X_train = data_train.drop(64, axis=1).values
     y_train = data_train[64].values.astype(int)
-    X_test = minmax_scale(data_test.drop(64, axis=1).values)
+    X_test = data_test.drop(64, axis=1).values
     y_test = data_test[64].values.astype(int)
-    X_train = np.delete(X_train, 0, axis=1)
-    X_train = np.delete(X_train, 23, axis=1)
-    X_train = np.delete(X_train, 30, axis=1)
-    X_train = np.delete(X_train, 36, axis=1)
-    X_test = np.delete(X_test, 0, axis=1)
-    X_test = np.delete(X_test, 23, axis=1)
-    X_test = np.delete(X_test, 30, axis=1)
-    X_test = np.delete(X_test, 36, axis=1)
 
     # Train the model and predict
-    classifier = BPNNClassifier(in_n=60, hid_l=4, hid_n=4, out_n=10, lmbda=0.05).fit(X_train, y_train)
+    classifier = BPNNClassifier(in_n=61, hid_l=8, hid_n=16, out_n=10, lmbda=0.05).fit(X_train, y_train)
     prediction = classifier.predict(X_test)
 
     final_true = y_test.tolist()
