@@ -198,7 +198,7 @@ if __name__ == "__main__":
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
-        for loop in range(0, 10):
+        for loop in range(0, 100):
             X_train = data_train.drop('# class', axis=1).values
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
 
-    plt.plot(range(1, len(y_train), 5), J_final, '.-', markersize=10, color='#1f77b4')
+    plt.plot(range(1, len(data_train['# class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Performance (J) of the network')
     plt.title('The Wine Dataset')
