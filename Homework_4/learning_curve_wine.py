@@ -198,17 +198,16 @@ if __name__ == "__main__":
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
-        for loop in range(0, 10):
+        for loop in range(0, 100):
             X_train = data_train.drop('# class', axis=1).values
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
-            classifier = BPNNClassifier(in_n=13, hid_l=2, hid_n=2, out_n=3, lmbda=0.05).fit(X_train, y_train)
+            classifier = BPNNClassifier(in_n=13, hid_l=2, hid_n=4, out_n=3, lmbda=0.001).fit(X_train, y_train)
             [prediction, probability] = classifier.predict(X_test, probability=True)
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
-            print(loop)
-        print(n_sample)
+        print(n_sample, ' samples')
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
 
