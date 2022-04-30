@@ -208,7 +208,7 @@ if __name__ == "__main__":
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
 
-    plt.plot(range(1, len(data_train['Class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
+    plt.plot(range(1, len(data_train['Class'].values), 5), J_final.reverse(), '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Performance (J) of the network')
     plt.title('The Breast Cancer Dataset')
