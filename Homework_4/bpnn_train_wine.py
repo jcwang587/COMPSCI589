@@ -2,14 +2,9 @@ import numpy as np
 import pandas as pd
 
 
-def minmax_scale(data):
-    mins = data.min(0)
-    maxs = data.max(0)
-    ranges = maxs - mins
-    row = data.shape[0]
-    normData = data - np.tile(mins, (row, 1))
-    normData = normData / np.tile(ranges, (row, 1))
-    return normData
+def minmax_scale(df_in):
+    df_norm = (df_in - df_in.min()) / (df_in.max() - df_in.min())
+    return df_norm
 
 
 def sigmoid(z):
@@ -167,6 +162,7 @@ if __name__ == "__main__":
     # Load data
     df = pd.read_csv('hw3_wine.csv', sep='\t')
     col_class = df.pop('# class')
+    df = minmax_scale(df)
     df.insert(len(df.columns), '# class', col_class)
     col_mean = df.mean().tolist()
 
@@ -205,9 +201,9 @@ if __name__ == "__main__":
                 data_test = k_fold[fold_idx]
                 del k_fold_copy[fold_idx]
                 data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-                X_train = minmax_scale(data_train.drop('# class', axis=1).values)
+                X_train = data_train.drop('# class', axis=1).values
                 y_train = data_train['# class'].values - 1
-                X_test = minmax_scale(data_test.drop('# class', axis=1).values)
+                X_test = data_test.drop('# class', axis=1).values
                 y_test = data_test['# class'].values - 1
 
                 # Train the model and predict
