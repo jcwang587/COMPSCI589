@@ -198,7 +198,7 @@ if __name__ == "__main__":
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
-        for loop in range(0, 100):
+        for loop in range(0, 10):
             X_train = data_train.drop('# class', axis=1).values
             y_train = data_train['# class'].values - 1
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
