@@ -196,8 +196,8 @@ if __name__ == "__main__":
     J_final = []
     for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
-            X_train = data_train.drop('# class', axis=1).values
-            y_train = data_train['# class'].values
+            X_train = data_train.drop('class', axis=1).values
+            y_train = data_train['class'].values
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
             classifier = BPNNClassifier(in_n=16, hid_l=4, hid_n=4, out_n=2, lmbda=0.001).fit(X_train, y_train)
@@ -205,11 +205,11 @@ if __name__ == "__main__":
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
             print(loop)
-        print(len(data_train['# class'].values)-n_sample, ' samples')
+        print(len(data_train['class'].values)-n_sample, ' samples')
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
 
-    plt.plot(range(1, len(data_train['# class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
+    plt.plot(range(1, len(data_train['class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Performance (J) of the network')
     plt.title('The 1984 United States Congressional Voting Dataset')

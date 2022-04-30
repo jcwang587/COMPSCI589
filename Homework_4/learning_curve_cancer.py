@@ -188,16 +188,16 @@ if __name__ == "__main__":
     data_test = k_fold[0]
     del k_fold_copy[0]
     data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-    X_train = data_train.drop('class', axis=1).values
-    y_train = data_train['class'].values
-    X_test = data_test.drop('class', axis=1).values
-    y_test = data_test['class'].values
+    X_train = data_train.drop('Class', axis=1).values
+    y_train = data_train['Class'].values
+    X_test = data_test.drop('Class', axis=1).values
+    y_test = data_test['Class'].values
     J_loop = []
     J_final = []
     for n_sample in range(1, len(y_train), 5):
         for loop in range(0, 100):
-            X_train = data_train.drop('# class', axis=1).values
-            y_train = data_train['# class'].values
+            X_train = data_train.drop('Class', axis=1).values
+            y_train = data_train['Class'].values
             X_train = np.delete(X_train, range(0, n_sample), axis=0)
             y_train = np.delete(y_train, range(0, n_sample), axis=0)
             classifier = BPNNClassifier(in_n=9, hid_l=1, hid_n=8, out_n=2, lmbda=0.05).fit(X_train, y_train)
@@ -205,11 +205,11 @@ if __name__ == "__main__":
             J = -np.sum(np.log(probability) * BPNNClassifier.encoder(classifier, y_test)) / len(y_test)
             J_loop.append(J)
             print(loop)
-        print(len(data_train['# class'].values)-n_sample, ' samples')
+        print(len(data_train['Class'].values)-n_sample, ' samples')
         print('J =', np.mean(J_loop))
         J_final.append(np.mean(J_loop))
 
-    plt.plot(range(1, len(data_train['# class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
+    plt.plot(range(1, len(data_train['Class'].values), 5), J_final, '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Performance (J) of the network')
     plt.title('The Breast Cancer Dataset')
