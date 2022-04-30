@@ -170,7 +170,6 @@ if __name__ == "__main__":
     df = minmax_scale(df)
     df = df.drop(df.columns[[0, 32, 39]], axis=1)
     df.insert(len(df.columns), 64, col_class)
-    col_mean = df.mean().tolist()
 
     list_target = df[64].unique()
     df9 = df[df[64].isin([list_target[0]])]

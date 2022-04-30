@@ -166,7 +166,6 @@ if __name__ == "__main__":
     col_class = df.pop('# class')
     df = minmax_scale(df)
     df.insert(len(df.columns), '# class', col_class)
-    col_mean = df.mean().tolist()
 
     list_target = df['# class'].unique()
     df2 = df[df['# class'].isin([list_target[0]])]

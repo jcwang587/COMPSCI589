@@ -3,14 +3,9 @@ import pandas as pd
 import math
 
 
-def minmax_scale(data):
-    mins = data.min(0)
-    maxs = data.max(0)
-    ranges = maxs - mins
-    row = data.shape[0]
-    normData = data - np.tile(mins, (row, 1))
-    normData = normData / np.tile(ranges, (row, 1))
-    return normData
+def minmax_scale(df_in):
+    df_norm = (df_in - df_in.min()) / (df_in.max() - df_in.min())
+    return df_norm
 
 
 def sigmoid(z):
