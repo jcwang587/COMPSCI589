@@ -54,6 +54,7 @@ if __name__ == '__main__':
     for k in k_list:
         print('k = ', k)
         fold_idx = 0
+        accuracy_k = []
         f1_k = []
         while fold_idx < 10:
             print('fold_idx = ', fold_idx)
@@ -83,13 +84,18 @@ if __name__ == '__main__':
                 y_pred.append(pred)
             y_test = y_test.tolist()
             f1_i = f1_score(y_test, y_pred)
+            accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
             f1_k.append(f1_i)
+            accuracy_k.append(accuracy_i)
             fold_idx += 1
         f1_avg = sum(f1_k) / len(f1_k)
+        accuracy_avg = sum(accuracy_k) / len(accuracy_k)
+        print('accuracy_avg = ', accuracy_avg)
         print('f1_avg = ', f1_avg)
+        accuracy.append(accuracy_avg)
         f1.append(f1_avg)
 
-# plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
-# plt.xlabel('Value of k')
-# plt.ylabel('Accuracy over training data')
-# plt.show()
+    plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
+    plt.xlabel('Value of k')
+    plt.ylabel('Accuracy over training data')
+    plt.show()
