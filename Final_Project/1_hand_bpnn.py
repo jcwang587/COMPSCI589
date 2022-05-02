@@ -16,27 +16,15 @@ def d_sigmoid(h):
     return h * (1 - h)
 
 
-def accuracy_score(y_true, y_pred):
-    score = y_true == y_pred
-    return np.average(score)
-
-
-def precision_score(y_true, y_pred):
-    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
-    tp = [y_pred[i] for i in tp_tn_idx].count(1)
-    tp_fp = y_pred.count(1)
-    return tp / tp_fp
-
-
-def recall_score(y_true, y_pred):
-    tp_tn_idx = np.where(y_true == y_pred)[0].tolist()
-    tp = [y_pred[i] for i in tp_tn_idx].count(1)
-    tp_fn = y_true.tolist().count(1)
-    return tp / tp_fn
-
-
-def f1_score(precision_value, recall_value):
-    return 2 * precision_value * recall_value / (precision_value + recall_value)
+def f1_score(actual, predicted):
+    TP = np.sum(np.multiply([i == True for i in predicted], actual))
+    TN = np.sum(np.multiply([i == False for i in predicted], [not j for j in actual]))
+    FP = np.sum(np.multiply([i == True for i in predicted], [not j for j in actual]))
+    FN = np.sum(np.multiply([i == False for i in predicted], actual))
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    f1 = (2 * precision * recall) / (precision + recall)
+    return f1
 
 
 class BPNNClassifier:
@@ -220,56 +208,31 @@ if __name__ == "__main__":
         df2.append(df1.append(df0))))))))))
 
     fold_idx = 0
-    # while fold_idx < 10:
-    # Split to train and test dataset
-    k_fold_copy = k_fold.copy()
-    data_test = k_fold[fold_idx]
-    del k_fold_copy[fold_idx]
-    data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-    X_train = data_train.drop(64, axis=1).values
-    y_train = data_train[64].values.astype(int)
-    X_test = data_test.drop(64, axis=1).values
-    y_test = data_test[64].values.astype(int)
+    accuracy_k = []
+    f1_k = []
+    while fold_idx < 10:
+        print('kfold index: ', fold_idx)
+        # Split to train and test dataset
+        k_fold_copy = k_fold.copy()
+        data_test = k_fold[fold_idx]
+        del k_fold_copy[fold_idx]
+        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+        X_train = data_train.drop(64, axis=1).values
+        y_train = data_train[64].values.astype(int)
+        X_test = data_test.drop(64, axis=1).values
+        y_test = data_test[64].values.astype(int)
 
-    # Train the model and predict
-    classifier = BPNNClassifier(in_n=61, hid_l=8, hid_n=16, out_n=10, lmbda=0.05).fit(X_train, y_train)
-    prediction = classifier.predict(X_test)
+        # Train the model and predict
+        classifier = BPNNClassifier(in_n=61, hid_l=8, hid_n=16, out_n=10, lmbda=0.05).fit(X_train, y_train)
+        prediction = classifier.predict(X_test)
 
-    final_true = y_test.tolist()
-    final_prediction = prediction.tolist()
+        final_true = y_test.tolist()
+        final_prediction = prediction.tolist()
 
-    # Calculate metrics
-    final_prediction_1 = [2 if i == 1 else i for i in final_prediction]
-    final_prediction_1 = [1 if i == 0 else i for i in final_prediction_1]
-    final_prediction_1 = [0 if i == 2 else i for i in final_prediction_1]
-    final_true_1 = [2 if i == 1 else i for i in final_true]
-    final_true_1 = [1 if i == 0 else i for i in final_true_1]
-    final_true_1 = np.array([0 if i == 2 else i for i in final_true_1])
-    accuracy1 = accuracy_score(final_true_1, final_prediction_1)
-    precision1 = precision_score(final_true_1, final_prediction_1)
-    recall1 = recall_score(final_true_1, final_prediction_1)
-    f11 = 2 * (precision1 * recall1) / (precision1 + recall1)
-
-    final_prediction_2 = [0 if i == 2 else i for i in final_prediction]
-    final_true_2 = np.array([0 if i == 2 else i for i in final_true])
-    accuracy2 = accuracy_score(final_true_2, final_prediction_2)
-    precision2 = precision_score(final_true_2, final_prediction_2)
-    recall2 = recall_score(final_true_2, final_prediction_2)
-    f12 = 2 * (precision2 * recall2) / (precision2 + recall2)
-
-    final_prediction_3 = [0 if i == 1 else i for i in final_prediction]
-    final_prediction_3 = [1 if i == 2 else i for i in final_prediction_3]
-    final_true_3 = [0 if i == 1 else i for i in final_true]
-    final_true_3 = np.array([1 if i == 2 else i for i in final_true_3])
-    accuracy3 = accuracy_score(final_true_3, final_prediction_3)
-    precision3 = precision_score(final_true_3, final_prediction_3)
-    recall3 = recall_score(final_true_3, final_prediction_3)
-    f13 = 2 * (precision3 * recall3) / (precision3 + recall3)
-
-    accuracy = np.mean([accuracy1, accuracy2, accuracy3])
-    f1 = np.mean([f11, f12, f13])
-    fold_idx += 1
-    print('kfold index: ', fold_idx)
-
-    print("Accuracy:", np.mean(accuracy))
-    print("F1:", np.mean(f1))
+        f1_i = f1_score(final_true, final_prediction)
+        accuracy_i = np.sum(np.array(final_prediction) == np.array(final_true)) / len(final_true)
+        f1_k.append(f1_i)
+        accuracy_k.append(accuracy_i)
+        fold_idx += 1
+    print("Accuracy:", np.mean(accuracy_k))
+    print("F1:", np.mean(f1_k))
