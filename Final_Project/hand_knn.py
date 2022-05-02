@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 from sklearn import datasets
 
 
-def f1_score(actual, predicted, label):
-    tp = np.sum((actual == label) & (predicted == label))
-    fp = np.sum((actual != label) & (predicted == label))
-    fn = np.sum((predicted != label) & (actual == label))
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * (precision * recall) / (precision + recall)
+def f1_score(actual, predicted):
+    TP = np.sum(np.multiply([i == True for i in predicted], actual))
+    TN = np.sum(np.multiply([i == False for i in predicted], [not j for j in actual]))
+    FP = np.sum(np.multiply([i == True for i in predicted], [not j for j in actual]))
+    FN = np.sum(np.multiply([i == False for i in predicted], actual))
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    f1 = (2 * precision * recall) / (precision + recall)
     return f1
 
 
@@ -84,11 +85,13 @@ if __name__ == '__main__':
 
     # Train the k-NN algorithm using training set
     accuracy = []
+    f1 = []
     for k in k_list:
         print('k = ', k)
-        correct = 0
         fold_idx = 0
-        while fold_idx < 1:
+        f1_k = []
+        while fold_idx < 10:
+            print('fold_idx = ', fold_idx)
             # Split to train and test dataset
             k_fold_copy = k_fold.copy()
             data_test = k_fold[fold_idx]
@@ -104,6 +107,7 @@ if __name__ == '__main__':
             y_train = pd.Series(y_train.tolist())
             y_test = pd.Series(y_test.tolist())
 
+            y_pred = []
             for index1, row1 in X_test.iterrows():
                 x = row1.values
                 distance = [np.sqrt(np.sum((row2.values - x) ** 2)) for index2, row2 in X_train.iterrows()]
@@ -111,13 +115,16 @@ if __name__ == '__main__':
                 y_idx_sort = y_train.values[idx_sort]
                 y_top_k = y_idx_sort[:k]
                 pred = max(set(y_top_k), key=y_top_k.tolist().count)
-                # y_pred.append(y_pred)
-                if max(y_top_k.tolist(), key=y_top_k.tolist().count) == y_test[index1]:
-                    correct += 1
-        accuracy.append(correct / len(y_test))
-    fold_idx += 1
+                y_pred.append(pred)
+            y_test = y_test.tolist()
+            f1_i = f1_score(y_test, y_pred)
+            f1_k.append(f1_i)
+            fold_idx += 1
+        f1_avg = sum(f1_k) / len(f1_k)
+        print('f1_avg = ', f1_avg)
+        f1.append(f1_avg)
 
-plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
-plt.xlabel('Value of k')
-plt.ylabel('Accuracy over training data')
-plt.show()
+# plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
+# plt.xlabel('Value of k')
+# plt.ylabel('Accuracy over training data')
+# plt.show()
