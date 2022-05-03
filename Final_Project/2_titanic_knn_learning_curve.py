@@ -89,7 +89,7 @@ if __name__ == '__main__':
         y_test = y_test.tolist()
         f1_i = f1_score(y_test, y_pred)
         accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
-        score.append(accuracy_i)
+        score.append(1-accuracy_i)
         print('accuracy_avg = ', accuracy_i)
         print('f1_avg = ', f1_i)
 
