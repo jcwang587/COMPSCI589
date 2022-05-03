@@ -38,31 +38,29 @@ if __name__ == '__main__':
     fold_size1 = math.ceil(len(df1) / 10)
     fold_size0 = math.ceil(len(df0) / 10)
     for k in range(0, 9):
-        fold1 = df1.sample(n=fold_size1)
-        fold0 = fold1.append(df0.sample(n=fold_size0))
+        fold1 = df1.sample(n=fold_size1, random_state=587)
+        fold0 = fold1.append(df0.sample(n=fold_size0, random_state=587))
         df1 = df1[~df1.index.isin(fold1.index)]
         df0 = df0[~df0.index.isin(fold0.index)]
         k_fold.append(fold0)
     k_fold.append(df1.append(df0))
 
     k = 41
-    final_accuracy = {}
+    fold_idx = 5
 
-    # Train the k-NN algorithm using training set
-    accuracy = []
-    f1 = []
+    k_fold_copy = k_fold.copy()
+    data_test = k_fold[fold_idx]
+    del k_fold_copy[fold_idx]
+    data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
+    data_train = data_train.drop(data_train.index[0], axis=0)
 
-    fold_idx = 0
-    accuracy_k = []
-    f1_k = []
-    while fold_idx < 10:
-        print('fold_idx = ', fold_idx)
+    for sample_size in range(0, len(data_train), 100):
         # Split to train and test dataset
         k_fold_copy = k_fold.copy()
         data_test = k_fold[fold_idx]
         del k_fold_copy[fold_idx]
-        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-        data_train.drop(data_train.columns[0], axis=1)
+        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
+        data_train = data_train.drop(data_train.index[range(0, sample_size)], axis=0)
         X_train = data_train.drop('Survived', axis=1).values
         y_train = data_train['Survived'].values.astype(int)
         X_test = data_test.drop('Survived', axis=1).values
@@ -85,13 +83,9 @@ if __name__ == '__main__':
         y_test = y_test.tolist()
         f1_i = f1_score(y_test, y_pred)
         accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
-        f1_k.append(f1_i)
-        accuracy_k.append(accuracy_i)
-        fold_idx += 1
-    f1_avg = sum(f1_k) / len(f1_k)
-    accuracy_avg = sum(accuracy_k) / len(accuracy_k)
-    print('accuracy_avg = ', accuracy_avg)
-    print('f1_avg = ', f1_avg)
+
+        print('accuracy_avg = ', accuracy_i)
+        print('f1_avg = ', f1_i)
 
     #
     # plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
