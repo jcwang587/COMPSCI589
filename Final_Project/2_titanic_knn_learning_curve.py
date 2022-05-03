@@ -90,8 +90,7 @@ if __name__ == '__main__':
         f1_i = f1_score(y_test, y_pred)
         accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
         score.append(1-accuracy_i)
-        print('accuracy_avg = ', accuracy_i)
-        print('f1_avg = ', f1_i)
+        print('n_sample:', n_sample, 'score:', 1-accuracy_i)
 
     plt.plot(range(0, len(data_train), 10), sorted(score, reverse=True),
              '.-', markersize=10, color='#1f77b4')

@@ -25,30 +25,14 @@ def minmax_scale(df_in):
 
 if __name__ == '__main__':
     # Load data
-    df = pd.read_csv('loan.csv', sep=',')
-    df = df.drop(columns=['Loan_ID'])
-    df = df.replace('Female', 0)
-    df = df.replace('Male', 1)
-    df = df.replace('N', 0)
-    df = df.replace('Y', 1)
-    df = df.replace('No', 0)
-    df = df.replace('Yes', 1)
-    df = df.replace('Not Graduate', 0)
-    df = df.replace('Graduate', 1)
-    df = df.replace('Rural', 0)
-    df = df.replace('Semiurban', 1)
-    df = df.replace('Urban', 2)
-    df = df.replace('3+', 3)
-    df = df.replace('2', 2)
-    df = df.replace('1', 1)
-    df = df.replace('0', 0)
-    col_class = df.pop('Loan_Status')
+    df = pd.read_csv('parkinsons.csv', sep=',')
+    col_class = df.pop('Diagnosis')
     df = minmax_scale(df)
-    df.insert(len(df.columns), 'Loan_Status', col_class)
+    df.insert(len(df.columns), 'Diagnosis', col_class)
 
-    list_target = df['Loan_Status'].unique()
-    df1 = df[df['Loan_Status'].isin([list_target[0]])]
-    df0 = df[df['Loan_Status'].isin([list_target[1]])]
+    list_target = df['Diagnosis'].unique()
+    df1 = df[df['Diagnosis'].isin([list_target[0]])]
+    df0 = df[df['Diagnosis'].isin([list_target[1]])]
     # Split into folds
     k_fold = []
     fold_size1 = math.ceil(len(df1) / 10)
@@ -61,7 +45,7 @@ if __name__ == '__main__':
         k_fold.append(fold0)
     k_fold.append(df1.append(df0))
 
-    k = 21
+    k = 41
     fold_idx = 5
 
     k_fold_copy = k_fold.copy()
@@ -77,12 +61,12 @@ if __name__ == '__main__':
         data_test = k_fold[fold_idx]
         del k_fold_copy[fold_idx]
         data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
-        X_train = data_train.drop('Loan_Status', axis=1).values
+        X_train = data_train.drop('Diagnosis', axis=1).values
         X_train = np.delete(X_train, range(0, n_sample), axis=0)
-        y_train = data_train['Loan_Status'].values.astype(int)
+        y_train = data_train['Diagnosis'].values.astype(int)
         y_train = np.delete(y_train, range(0, n_sample), axis=0)
-        X_test = data_test.drop('Loan_Status', axis=1).values
-        y_test = data_test['Loan_Status'].values.astype(int)
+        X_test = data_test.drop('Diagnosis', axis=1).values
+        y_test = data_test['Diagnosis'].values.astype(int)
         print('Training set size:', len(X_train))
 
         X_train = pd.DataFrame(X_train)
@@ -105,10 +89,10 @@ if __name__ == '__main__':
         score.append(1-accuracy_i)
         print('n_sample:', n_sample, 'score:', 1-accuracy_i)
 
-    plt.plot(range(0, len(data_train)-1, 10), sorted(score, reverse=True),
+    plt.plot(range(0, len(data_train), 10), sorted(score, reverse=True),
              '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Cost function')
-    plt.title('The Loan Dataset')
-    plt.savefig("learning_curve_loan.eps", dpi=600, format="eps")
+    plt.title('The Parkinson Dataset')
+    plt.savefig("learning_curve_parkinson.eps", dpi=600, format="eps")
     plt.show()
