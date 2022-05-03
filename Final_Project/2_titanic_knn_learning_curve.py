@@ -96,7 +96,7 @@ if __name__ == '__main__':
     plt.plot(range(0, len(data_train), 10), sorted(score, reverse=True),
              '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
-    plt.ylabel('Accuracy score')
+    plt.ylabel('Cost function')
     plt.title('The Titanic Dataset')
     plt.savefig("learning_curve_titanic.eps", dpi=600, format="eps")
     plt.show()

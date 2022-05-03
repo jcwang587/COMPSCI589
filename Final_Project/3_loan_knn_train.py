@@ -11,7 +11,10 @@ def f1_score(actual, predicted):
     FN = np.sum(np.multiply([i == False for i in predicted], actual))
     precision = TP / (TP + FP)
     recall = TP / (TP + FN)
-    f1 = (2 * precision * recall) / (precision + recall)
+    if precision != 0 and recall != 0:
+        f1 = (2 * precision * recall) / (precision + recall)
+    else:
+        f1 = 0
     return f1
 
 
@@ -22,14 +25,30 @@ def minmax_scale(df_in):
 
 if __name__ == '__main__':
     # Load data
-    df = pd.read_csv('parkinsons.csv', sep=',')
-    col_class = df.pop('Diagnosis')
+    df = pd.read_csv('loan.csv', sep=',')
+    df = df.drop(columns=['Loan_ID'])
+    df = df.replace('Female', 0)
+    df = df.replace('Male', 1)
+    df = df.replace('N', 0)
+    df = df.replace('Y', 1)
+    df = df.replace('No', 0)
+    df = df.replace('Yes', 1)
+    df = df.replace('Not Graduate', 0)
+    df = df.replace('Graduate', 1)
+    df = df.replace('Rural', 0)
+    df = df.replace('Semiurban', 1)
+    df = df.replace('Urban', 2)
+    df = df.replace('3+', 3)
+    df = df.replace('2', 2)
+    df = df.replace('1', 1)
+    df = df.replace('0', 0)
+    col_class = df.pop('Loan_Status')
     df = minmax_scale(df)
-    df.insert(len(df.columns), 'Diagnosis', col_class)
+    df.insert(len(df.columns), 'Loan_Status', col_class)
 
-    list_target = df['Diagnosis'].unique()
-    df1 = df[df['Diagnosis'].isin([list_target[0]])]
-    df0 = df[df['Diagnosis'].isin([list_target[1]])]
+    list_target = df['Loan_Status'].unique()
+    df1 = df[df['Loan_Status'].isin([list_target[0]])]
+    df0 = df[df['Loan_Status'].isin([list_target[1]])]
     # Split into folds
     k_fold = []
     fold_size1 = math.ceil(len(df1) / 10)
@@ -60,10 +79,10 @@ if __name__ == '__main__':
             data_test = k_fold[fold_idx]
             del k_fold_copy[fold_idx]
             data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
-            X_train = data_train.drop('Diagnosis', axis=1).values
-            y_train = data_train['Diagnosis'].values.astype(int)
-            X_test = data_test.drop('Diagnosis', axis=1).values
-            y_test = data_test['Diagnosis'].values.astype(int)
+            X_train = data_train.drop('Loan_Status', axis=1).values
+            y_train = data_train['Loan_Status'].values.astype(int)
+            X_test = data_test.drop('Loan_Status', axis=1).values
+            y_test = data_test['Loan_Status'].values.astype(int)
 
             X_train = pd.DataFrame(X_train)
             X_test = pd.DataFrame(X_test)
