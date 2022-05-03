@@ -11,7 +11,10 @@ def f1_score(actual, predicted):
     FN = np.sum(np.multiply([i == False for i in predicted], actual))
     precision = TP / (TP + FP)
     recall = TP / (TP + FN)
-    f1 = (2 * precision * recall) / (precision + recall)
+    if precision != 0 and recall != 0:
+        f1 = (2 * precision * recall) / (precision + recall)
+    else:
+        f1 = 0
     return f1
 
 
@@ -54,17 +57,20 @@ if __name__ == '__main__':
     data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
     data_train = data_train.drop(data_train.index[0], axis=0)
 
-    for sample_size in range(0, len(data_train), 100):
+    score = []
+    for n_sample in range(0, len(data_train), 10):
         # Split to train and test dataset
         k_fold_copy = k_fold.copy()
         data_test = k_fold[fold_idx]
         del k_fold_copy[fold_idx]
         data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
-        data_train = data_train.drop(data_train.index[range(0, sample_size)], axis=0)
         X_train = data_train.drop('Survived', axis=1).values
+        X_train = np.delete(X_train, range(0, n_sample), axis=0)
         y_train = data_train['Survived'].values.astype(int)
+        y_train = np.delete(y_train, range(0, n_sample), axis=0)
         X_test = data_test.drop('Survived', axis=1).values
         y_test = data_test['Survived'].values.astype(int)
+        print('Training set size:', len(X_train))
 
         X_train = pd.DataFrame(X_train)
         X_test = pd.DataFrame(X_test)
@@ -83,12 +89,14 @@ if __name__ == '__main__':
         y_test = y_test.tolist()
         f1_i = f1_score(y_test, y_pred)
         accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
-
+        score.append(accuracy_i)
         print('accuracy_avg = ', accuracy_i)
         print('f1_avg = ', f1_i)
 
-    #
-    # plt.plot(k_list, accuracy, '.-', markersize=10, color='#1f77b4')
-    # plt.xlabel('Value of k')
-    # plt.ylabel('Accuracy over training data')
-    # plt.show()
+    plt.plot(range(0, len(data_train), 10), sorted(score, reverse=True),
+             '.-', markersize=10, color='#1f77b4')
+    plt.xlabel('Number of training samples')
+    plt.ylabel('Accuracy score')
+    plt.title('The Titanic Dataset')
+    plt.savefig("learning_curve_titanic.eps", dpi=600, format="eps")
+    plt.show()
