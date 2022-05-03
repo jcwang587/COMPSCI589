@@ -45,7 +45,7 @@ if __name__ == '__main__':
         k_fold.append(fold0)
     k_fold.append(df1.append(df0))
 
-    k_list = range(1, 100, 10)
+    k_list = range(1, 22, 2)
     final_accuracy = {}
 
     # Train the k-NN algorithm using training set
