@@ -127,7 +127,7 @@ if __name__ == '__main__':
         score.append(1-accuracy_i)
         print('n_sample:', n_sample, 'score:', 1-accuracy_i)
 
-    plt.plot(range(0, len(data_train), 10), sorted(score, reverse=True),
+    plt.plot(range(0, len(data_train)-1, 10), sorted(score, reverse=True),
              '.-', markersize=10, color='#1f77b4')
     plt.xlabel('Number of training samples')
     plt.ylabel('Cost function')
