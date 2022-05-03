@@ -80,7 +80,7 @@ if __name__ == '__main__':
     k_fold.append(df9.append(df8.append(df7.append(df6.append(df5.append(df4.append(df3.append(
         df2.append(df1.append(df0))))))))))
 
-    k_list = range(1, 100, 10)
+    k_list = range(1, 502, 50)
     final_accuracy = {}
 
     # Train the k-NN algorithm using training set
@@ -134,4 +134,3 @@ if __name__ == '__main__':
     plt.xlabel('Value of k')
     plt.ylabel('Accuracy over training data')
     plt.show()
-
