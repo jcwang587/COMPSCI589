@@ -38,8 +38,8 @@ if __name__ == '__main__':
     fold_size1 = math.ceil(len(df1) / 10)
     fold_size0 = math.ceil(len(df0) / 10)
     for k in range(0, 9):
-        fold1 = df1.sample(n=fold_size1)
-        fold0 = fold1.append(df0.sample(n=fold_size0))
+        fold1 = df1.sample(n=fold_size1, random_state=587)
+        fold0 = fold1.append(df0.sample(n=fold_size0, random_state=587))
         df1 = df1[~df1.index.isin(fold1.index)]
         df0 = df0[~df0.index.isin(fold0.index)]
         k_fold.append(fold0)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             k_fold_copy = k_fold.copy()
             data_test = k_fold[fold_idx]
             del k_fold_copy[fold_idx]
-            data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+            data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
             X_train = data_train.drop('Diagnosis', axis=1).values
             y_train = data_train['Diagnosis'].values.astype(int)
             X_test = data_test.drop('Diagnosis', axis=1).values

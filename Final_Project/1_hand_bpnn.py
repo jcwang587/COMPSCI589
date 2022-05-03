@@ -183,16 +183,16 @@ if __name__ == "__main__":
     fold_size1 = int(len(df1) / 10)
     fold_size0 = int(len(df0) / 10)
     for k in range(0, 9):
-        fold9 = df9.sample(n=fold_size9)
-        fold8 = fold9.append(df8.sample(n=fold_size8))
-        fold7 = fold8.append(df7.sample(n=fold_size7))
-        fold6 = fold7.append(df6.sample(n=fold_size6))
-        fold5 = fold6.append(df5.sample(n=fold_size5))
-        fold4 = fold5.append(df4.sample(n=fold_size4))
-        fold3 = fold4.append(df3.sample(n=fold_size3))
-        fold2 = fold3.append(df2.sample(n=fold_size2))
-        fold1 = fold2.append(df1.sample(n=fold_size1))
-        fold0 = fold1.append(df0.sample(n=fold_size0))
+        fold9 = df9.sample(n=fold_size9, random_state=587)
+        fold8 = fold9.append(df8.sample(n=fold_size8, random_state=587))
+        fold7 = fold8.append(df7.sample(n=fold_size7, random_state=587))
+        fold6 = fold7.append(df6.sample(n=fold_size6, random_state=587))
+        fold5 = fold6.append(df5.sample(n=fold_size5, random_state=587))
+        fold4 = fold5.append(df4.sample(n=fold_size4, random_state=587))
+        fold3 = fold4.append(df3.sample(n=fold_size3, random_state=587))
+        fold2 = fold3.append(df2.sample(n=fold_size2, random_state=587))
+        fold1 = fold2.append(df1.sample(n=fold_size1, random_state=587))
+        fold0 = fold1.append(df0.sample(n=fold_size0, random_state=587))
         df9 = df9[~df9.index.isin(fold9.index)]
         df8 = df8[~df8.index.isin(fold8.index)]
         df7 = df7[~df7.index.isin(fold7.index)]
@@ -216,7 +216,7 @@ if __name__ == "__main__":
         k_fold_copy = k_fold.copy()
         data_test = k_fold[fold_idx]
         del k_fold_copy[fold_idx]
-        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True)
+        data_train = pd.concat(k_fold_copy).sample(n=len(df) - len(data_test.index), replace=True, random_state=587)
         X_train = data_train.drop(64, axis=1).values
         y_train = data_train[64].values.astype(int)
         X_test = data_test.drop(64, axis=1).values
