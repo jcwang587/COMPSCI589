@@ -18,6 +18,16 @@ def f1_score(actual, predicted):
     return f1
 
 
+def f1_macro(y_true, y_pred):
+    macro = []
+    for i in np.unique(y_true):
+        modified_true = [i == j for j in y_true]
+        modified_pred = [i == j for j in y_pred]
+        score = f1_score(modified_true, modified_pred)
+        macro.append(score)
+    return np.mean(macro)
+
+
 def minmax_scale(df_in):
     df_norm = (df_in - df_in.min()) / (df_in.max() - df_in.min())
     return df_norm
@@ -121,7 +131,7 @@ if __name__ == '__main__':
                 pred = max(set(y_top_k), key=y_top_k.tolist().count)
                 y_pred.append(pred)
             y_test = y_test.tolist()
-            f1_i = f1_score(y_test, y_pred)
+            f1_i = f1_macro(y_test, y_pred)
             accuracy_i = np.sum(np.array(y_pred) == np.array(y_test)) / len(y_test)
             f1_k.append(f1_i)
             accuracy_k.append(accuracy_i)
